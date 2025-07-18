@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Services\JtbService;
 use Illuminate\Support\Facades\Log;
 
+
 class JtbController extends Controller
 {
     protected $jtbService;
