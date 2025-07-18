@@ -34,12 +34,7 @@ Route::get('/add-tax-record', function () {
     return Inertia::render('AddRecord');
 });
 
-// Route::get('/check-url', function () {
-//     return url('/individual');
-// });
-Route::get('/individual', function () {
-    return Inertia::render('Individual');
-});
+
 
 Route::get('/add-asset', function () {
     return Inertia::render('AddAssets');
