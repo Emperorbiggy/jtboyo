@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
-const basePath = '/app/public'; 
+const basePath = '/app/public';
 
 export default function AddAssets() {
   const [form, setForm] = useState({
@@ -59,7 +59,7 @@ export default function AddAssets() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-green-800">Add Asset Record</h1>
           <button
-            onClick={() => router.visit('${basePath}/dashboard')}
+            onClick={() => window.location.href = `${basePath}/individual`}
             className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition"
           >
             Back to Dashboard
