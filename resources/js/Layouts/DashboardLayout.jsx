@@ -3,7 +3,7 @@ import { usePage, router } from '@inertiajs/react';
 import { FaUserCircle } from 'react-icons/fa';
 
 export default function DashboardLayout({ children }) {
-  const { auth } = usePage().props;
+  const { auth, jtb_token, jtb_token_expires_at } = usePage().props;
   const user = auth?.user;
 
   const [showDropdown, setShowDropdown] = useState(false);
@@ -15,7 +15,11 @@ export default function DashboardLayout({ children }) {
     if (!user) {
       router.visit(route('login'));
     }
-  }, [user]);
+
+    // 🧪 Console log the shared token info
+    console.log('🔐 JTB Token:', jtb_token);
+    console.log('📆 Token Expires At:', jtb_token_expires_at);
+  }, [user, jtb_token, jtb_token_expires_at]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
