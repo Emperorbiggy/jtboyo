@@ -7,13 +7,12 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\JtbService;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -31,47 +30,51 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-   public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
+    public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
 {
-    // Authenticate user
-    $request->authenticate();
+    Log::info('🔐 Entered store method of AuthenticatedSessionController');
+
+    try {
+        $request->authenticate();
+        Log::info('✅ Authentication successful.');
+    } catch (ValidationException $e) {
+        Log::error('❌ Authentication failed', [
+            'error' => $e->getMessage(),
+        ]);
+        throw $e; // Let Laravel handle redirect with error message
+    }
+
     $request->session()->regenerate();
 
     $user = auth()->user();
+    Log::info('👤 Authenticated User', ['email' => $user->email]);
 
-    // Log authenticated user info
-    \Log::info('User logged in', ['user_id' => $user->id, 'email' => $user->email]);
-
-    // If user is admin, generate and store JTB token
     if ($user->email === 'admin@jtb.oyostate.gov.ng') {
-        \Log::info('Attempting JTB token generation for admin user...');
+        Log::info('🎯 Admin matched. Attempting to fetch token...');
 
         $token = $jtbService->generateTokenId();
 
         if ($token) {
+            $expiresAt = now()->addSeconds(3540);
+
             session([
                 'jtb_token' => $token,
-                'jtb_token_expires_at' => now()->addSeconds(3540),
+                'jtb_token_expires_at' => $expiresAt,
             ]);
 
-            \Log::info('JTB token successfully stored in session', [
-                'token' => $token,
-                'expires_at' => now()->addSeconds(3540)->toDateTimeString(),
-            ]);
+            Log::info('✅ JTB token stored', ['expires_at' => $expiresAt->toDateTimeString()]);
         } else {
-            \Log::warning('JTB token generation failed. Logging user out.');
-
+            Log::warning('❌ Failed to get JTB token. Logging out.');
             auth()->logout();
 
             return redirect()->route('login')->withErrors([
-                'email' => 'JTB token generation failed. Try again later.',
+                'email' => 'Failed to generate JTB token. Try again later.',
             ]);
         }
     }
 
     return redirect()->intended(route('dashboard', absolute: false));
 }
-
     /**
      * Destroy an authenticated session.
      */
@@ -80,7 +83,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
