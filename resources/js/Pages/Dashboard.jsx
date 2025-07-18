@@ -3,8 +3,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { FaUsers, FaBuilding, FaPlusCircle, FaFileInvoice } from 'react-icons/fa';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
-const basePath = '/app/public'; // Adjust based on your actual deployment
-
+const basePath = '/app/public'; 
 export default function Dashboard() {
   const { props } = usePage();
   const demoUser = props.auth?.user || { name: 'John Doe' };

@@ -6,7 +6,7 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-
+const basePath = '/app/public';
 const demoTaxpayers = [
   {
     tin: '0025152785',
@@ -137,7 +137,7 @@ export default function IndividualTaxPayer() {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <Link
-            href="/dashboard"
+            href="${basePath}/dashboard"
             className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
           >
             ← Back to Dashboard
