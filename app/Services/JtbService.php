@@ -20,60 +20,45 @@ class JtbService
         $this->clientName = config('services.jtb.client_name');
     }
 
-    public function generateTokenId(): ?string
-    {
-        $url = "{$this->baseUrl}/GetTokenID";
-        $requestBody = [
+    public function generateTokenId()
+{
+    try {
+        Log::info('JTB Token Request Initiated', [
+            'url' => $this->baseUrl . '/GetTokenID',
+            'payload' => [
+                'email' => $this->email,
+                'password' => $this->password,
+                'clientname' => $this->clientName,
+            ],
+        ]);
+
+        $response = Http::timeout(15)->post($this->baseUrl . '/GetTokenID', [
             'email' => $this->email,
             'password' => $this->password,
             'clientname' => $this->clientName,
-        ];
-
-        // Generate cURL equivalent
-        $curl = <<<CURL
-curl --location --request POST '{$url}' \\
---header 'Accept: application/json' \\
---header 'Content-Type: application/json' \\
---data '{
-  "email": "{$this->email}",
-  "password": "******",
-  "clientname": "{$this->clientName}"
-}'
-CURL;
-
-        Log::info('JTB Token Request Initiated', [
-            'url' => $url,
-            'payload' => $requestBody,
-            'curl' => $curl,
         ]);
 
-        try {
-            $response = Http::withHeaders([
-                'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
-            ])->post($url, $requestBody);
-
+        if ($response->ok()) {
             Log::info('JTB Token Response Received', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
 
-            if ($response->successful()) {
-                $data = $response->json();
-                return $data['tokenid'] ?? null;
+            $data = $response->json();
+
+            if ($data['success'] === "true" && isset($data['tokenId'])) {
+                return $data['tokenId']; // ✅ Return only the token
             }
-
-            Log::error('JTB token generation failed', [
-                'status' => $response->status(),
-                'body' => $response->body(),
-            ]);
-
-            return null;
-        } catch (\Exception $e) {
-            Log::error('JTB token generation exception: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return null;
         }
+
+        Log::error('Failed to get valid token from JTB', [
+            'response' => $response->body()
+        ]);
+    } catch (\Exception $e) {
+        Log::error('JTB token generation exception: ' . $e->getMessage());
     }
+
+    return null; // fallback if anything fails
+}
+
 }
