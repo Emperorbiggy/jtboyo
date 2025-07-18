@@ -40,13 +40,16 @@ class JtbController extends Controller
     /**
      * Fetch individual taxpayers from JTB using session token.
      */
-    public function fetchIndividualTaxpayers(Request $request)
+   public function fetchIndividualTaxpayers(Request $request)
 {
     $fromDate = $request->input('fromDate');
     $toDate = $request->input('toDate');
 
     $token = session('jtb_token');
     $expiresAt = session('jtb_token_expires_at');
+
+    // Log token and expiry info for debugging
+    Log::info('JTB Token from session:', ['token' => $token, 'expires_at' => $expiresAt]);
 
     // Token expiry check
     if (!$token || now()->greaterThan($expiresAt)) {
