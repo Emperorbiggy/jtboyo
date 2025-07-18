@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Services\JtbService;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Session;
 
 class JtbController extends Controller
 {
@@ -17,7 +17,7 @@ class JtbController extends Controller
     }
 
     /**
-     * Generate a fresh token from JTB and return it.
+     * Generate a fresh token from JTB (manual trigger, optional).
      */
     public function getToken()
     {
@@ -36,4 +36,26 @@ class JtbController extends Controller
             'message' => 'Failed to generate token',
         ], 500);
     }
+
+    /**
+     * Fetch individual taxpayers from JTB using session token.
+     */
+    public function fetchIndividualTaxpayers(Request $request)
+{
+    $fromDate = $request->input('fromDate');
+    $toDate = $request->input('toDate');
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    // Token expiry check
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
+    return response()->json($data);
+}
+
 }

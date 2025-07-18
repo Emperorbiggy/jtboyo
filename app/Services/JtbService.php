@@ -60,5 +60,33 @@ class JtbService
 
     return null; // fallback if anything fails
 }
+public function getIndividualTaxpayers(string $token, string $fromDate, string $toDate)
+{
+    try {
+        $endpoint = $this->baseUrl . "/SBIR/Individual?tokenid={$token}";
+
+        Log::info('Fetching JTB Individual Taxpayers', compact('endpoint', 'fromDate', 'toDate'));
+
+        $response = Http::withHeaders([
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+        ])->post($endpoint, [
+            'fromdate' => $fromDate,
+            'todate' => $toDate,
+        ]);
+
+        if ($response->ok()) {
+            return $response->json();
+        }
+
+        Log::error('Failed JTB Individual API call', ['status' => $response->status(), 'body' => $response->body()]);
+    } catch (\Exception $e) {
+        Log::error('JTB individual taxpayers error: ' . $e->getMessage());
+    }
+
+    return ['success' => false, 'message' => 'Request failed'];
+}
+
+
 
 }

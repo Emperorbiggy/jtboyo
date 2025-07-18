@@ -6,106 +6,61 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+
 const basePath = '/app/public';
-const demoTaxpayers = [
-  {
-    tin: '0025152785',
-    bvn: '22142XXXXXX',
-    nin: '52332222',
-    Title: 'Mr.',
-    SBIRt_name: 'ARUA',
-    middle_name: 'ONWUKA',
-    last_name: 'OBAJI',
-    GenderName: 'Male',
-    StateOfOrigin: 'ABIA',
-    date_of_birth: '2025-05-23',
-    nationality_name: 'Nigerian',
-    phone_no_1: '08024986156',
-    LGAName: 'YABO',
-    StateName: 'ABIA',
-    CountryName: 'Nigeria',
-    TaxAuthorityCode: 'ABIRS',
-    TaxAuthorityName: 'Abia State Board of Internal Revenue',
-    TaxpayerStatus: 'Active',
-  },
-  {
-    tin: '0025152786',
-    bvn: '22142XXXXXY',
-    nin: '52332223',
-    Title: 'Mrs.',
-    SBIRt_name: 'GRACE',
-    middle_name: 'EMEKA',
-    last_name: 'NWANKWO',
-    GenderName: 'Female',
-    StateOfOrigin: 'ENUGU',
-    date_of_birth: '2025-04-12',
-    nationality_name: 'Nigerian',
-    phone_no_1: '08033921156',
-    LGAName: 'NSUKKA',
-    StateName: 'ENUGU',
-    CountryName: 'Nigeria',
-    TaxAuthorityCode: 'ENIRS',
-    TaxAuthorityName: 'Enugu Internal Revenue Service',
-    TaxpayerStatus: 'Active',
-  },
-  {
-    tin: '0025152787',
-    bvn: '22142XXXXXZ',
-    nin: '52332224',
-    Title: 'Dr.',
-    SBIRt_name: 'TUNDE',
-    middle_name: 'BOLA',
-    last_name: 'FALANA',
-    GenderName: 'Male',
-    StateOfOrigin: 'LAGOS',
-    date_of_birth: '2025-05-07',
-    nationality_name: 'Nigerian',
-    phone_no_1: '07023456156',
-    LGAName: 'IKEJA',
-    StateName: 'LAGOS',
-    CountryName: 'Nigeria',
-    TaxAuthorityCode: 'LIRS',
-    TaxAuthorityName: 'Lagos Internal Revenue Service',
-    TaxpayerStatus: 'Inactive',
-  },
-  {
-    tin: '0025152788',
-    bvn: '22142XXXXXK',
-    nin: '52332225',
-    Title: 'Mr.',
-    SBIRt_name: 'KINGSLEY',
-    middle_name: 'UZO',
-    last_name: 'NWAFOR',
-    GenderName: 'Male',
-    StateOfOrigin: 'ANAMBRA',
-    date_of_birth: '2025-05-15',
-    nationality_name: 'Nigerian',
-    phone_no_1: '08112345678',
-    LGAName: 'AWKA SOUTH',
-    StateName: 'ANAMBRA',
-    CountryName: 'Nigeria',
-    TaxAuthorityCode: 'ANIRS',
-    TaxAuthorityName: 'Anambra State IRS',
-    TaxpayerStatus: 'Active',
-  },
-];
 
 export default function IndividualTaxPayer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [taxpayers, setTaxpayers] = useState([]);
+
   const [fromDate, setFromDate] = useState(() => {
     const date = new Date();
-    date.setMonth(date.getMonth() - 3);
+    date.setDate(date.getDate() - 7);
     return date;
   });
+
   const [toDate, setToDate] = useState(new Date());
+
   const itemsPerPage = 10;
 
-  const filteredTaxpayers = demoTaxpayers.filter((t) => {
-    const matchSearch = t.tin.toLowerCase().includes(search.toLowerCase()) || 
-                        t.SBIRt_name.toLowerCase().includes(search.toLowerCase()) ||
-                        t.last_name.toLowerCase().includes(search.toLowerCase());
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/jtb/individuals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            fromDate: fromDate.toLocaleDateString('en-GB'),
+            toDate: toDate.toLocaleDateString('en-GB'),
+          }),
+        });
+
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+
+        const data = await res.json();
+        if (data.success && data.taxpayers) {
+          setTaxpayers(data.taxpayers);
+        }
+      } catch (error) {
+        console.error('Failed to fetch taxpayers', error);
+      }
+    };
+
+    fetchData();
+  }, [fromDate, toDate]);
+
+  const filteredTaxpayers = taxpayers.filter((t) => {
+    const matchSearch = t.tin?.toLowerCase().includes(search.toLowerCase()) ||
+                        t.SBIRt_name?.toLowerCase().includes(search.toLowerCase()) ||
+                        t.last_name?.toLowerCase().includes(search.toLowerCase());
 
     const matchStatus = statusFilter === '' || t.TaxpayerStatus === statusFilter;
 
@@ -137,12 +92,11 @@ export default function IndividualTaxPayer() {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <Link
-  href={`${basePath}/dashboard`}
-  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
->
-  ← Back to Dashboard
-</Link>
-
+            href={`${basePath}/dashboard`}
+            className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+          >
+            ← Back to Dashboard
+          </Link>
 
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center border px-2 py-1 rounded">
@@ -219,7 +173,7 @@ export default function IndividualTaxPayer() {
                   <tr key={i} className="hover:bg-gray-100 border-b">
                     <td className="px-4 py-2">{t.tin}</td>
                     <td className="px-4 py-2">
-                      {`${t.Title} ${t.SBIRt_name} ${t.middle_name} ${t.last_name}`}
+                      {`${t.Title || ''} ${t.SBIRt_name || ''} ${t.middle_name || ''} ${t.last_name || ''}`}
                     </td>
                     <td className="px-4 py-2">{t.GenderName}</td>
                     <td className="px-4 py-2">{t.date_of_birth}</td>
@@ -229,7 +183,11 @@ export default function IndividualTaxPayer() {
                     <td className="px-4 py-2">{t.LGAName}</td>
                     <td className="px-4 py-2">{t.TaxAuthorityName}</td>
                     <td className="px-4 py-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${t.TaxpayerStatus === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                        t.TaxpayerStatus === 'Active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
                         {t.TaxpayerStatus}
                       </span>
                     </td>
@@ -248,7 +206,9 @@ export default function IndividualTaxPayer() {
           >
             Previous
           </button>
-          <span className="text-gray-700">Page {currentPage} of {totalPages}</span>
+          <span className="text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
