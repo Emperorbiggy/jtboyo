@@ -16,7 +16,8 @@ use App\Http\Controllers\AuthController;
 |
 */
 
-Route::middleware(['auth'])->post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
+Route::post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
+
 
 
 // Group routes that require authentication
