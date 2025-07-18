@@ -48,17 +48,35 @@ class JtbController extends Controller
     $token = session('jtb_token');
     $expiresAt = session('jtb_token_expires_at');
 
-    // Log token and expiry info for debugging
-    Log::info('JTB Token from session:', ['token' => $token, 'expires_at' => $expiresAt]);
+    Log::info('🔐 Checking JTB Token from session', [
+        'token_present' => $token ? 'yes' : 'no',
+        'expires_at' => $expiresAt,
+        'now' => now()->toDateTimeString(),
+    ]);
 
-    // Token expiry check
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    // Check if token is missing or expired
+    if (!$token || !$expiresAt || now()->greaterThan($expiresAt)) {
+        Log::warning('🚫 JTB Token missing or expired. Forcing logout.');
+        auth()->logout(); // Optional: Only if session is tied to auth user
+        return response()->json([
+            'success' => false,
+            'message' => 'Session expired. Please login again.',
+        ], 401);
     }
 
-    $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
-    return response()->json($data);
+    try {
+        $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
+        return response()->json($data);
+    } catch (\Exception $e) {
+        Log::error('❌ Failed to fetch taxpayers from JTB API', [
+            'message' => $e->getMessage(),
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch data from JTB.',
+        ], 500);
+    }
 }
+
 
 }
