@@ -62,7 +62,7 @@ class JtbService
 }
 public function getIndividualTaxpayers(string $token, string $fromDate, string $toDate)
 {
-    $url = $this->baseUrl . '/SBIR/IndividualPaged?tokenid=' . $token;
+    $url = $this->baseUrl . '/SBIR/Individual?tokenid=' . $token;
 
     // Ensure date format is dd-MM-yyyy
     $formattedFrom = \Carbon\Carbon::parse($fromDate)->format('d-m-Y');
@@ -81,8 +81,6 @@ public function getIndividualTaxpayers(string $token, string $fromDate, string $
         ])->post($url, [
             'fromdate' => $formattedFrom,
             'todate' => $formattedTo,
-            'page_number' => '5',
-
         ]);
 
         Log::info('JTB Response', ['status' => $response->status(), 'body' => $response->body()]);
