@@ -30,26 +30,38 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
+   public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
 {
     // Authenticate user
     $request->authenticate();
     $request->session()->regenerate();
 
-    // If user is the admin, generate and store JTB token
     $user = auth()->user();
 
-    if ($user->email === 'admin@jtb.oyostate.gov.ng') {
-        $tokenData = $jtbService->generateTokenId();
+    // Log authenticated user info
+    \Log::info('User logged in', ['user_id' => $user->id, 'email' => $user->email]);
 
-        if ($tokenData) {
+    // If user is admin, generate and store JTB token
+    if ($user->email === 'admin@jtb.oyostate.gov.ng') {
+        \Log::info('Attempting JTB token generation for admin user...');
+
+        $token = $jtbService->generateTokenId();
+
+        if ($token) {
             session([
-                'jtb_token' => $tokenData,
-                'jtb_token_expires_at' => now()->addMinutes(59), // to be safe
+                'jtb_token' => $token,
+                'jtb_token_expires_at' => now()->addSeconds(3540),
+            ]);
+
+            \Log::info('JTB token successfully stored in session', [
+                'token' => $token,
+                'expires_at' => now()->addSeconds(3540)->toDateTimeString(),
             ]);
         } else {
-            // Optional: logout admin if token generation fails
+            \Log::warning('JTB token generation failed. Logging user out.');
+
             auth()->logout();
+
             return redirect()->route('login')->withErrors([
                 'email' => 'JTB token generation failed. Try again later.',
             ]);
