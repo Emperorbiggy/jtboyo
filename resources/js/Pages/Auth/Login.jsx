@@ -5,6 +5,7 @@ import InputLabel from '@/Components/InputLabel'
 import PrimaryButton from '@/Components/PrimaryButton'
 import TextInput from '@/Components/TextInput'
 import { Head, Link, useForm } from '@inertiajs/react'
+import loginBg from '@images/login.jpeg' // ✅ Imported image
 
 export default function Login({ status, canResetPassword }) {
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -29,7 +30,7 @@ export default function Login({ status, canResetPassword }) {
       <div
         className="min-h-screen bg-cover bg-center flex items-center justify-center relative"
         style={{
-          backgroundImage: "url('/images/login.jpeg')",
+          backgroundImage: `url(${loginBg})`, // ✅ Used imported image
         }}
       >
         {/* Overlay */}
@@ -85,13 +86,11 @@ export default function Login({ status, canResetPassword }) {
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    // Eye Off
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
                       viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.08.173-2.118.492-3.092M15 12a3 3 0 11-6 0 3 3 0 016 0zM3 3l18 18" />
                     </svg>
                   ) : (
-                    // Eye On
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none"
                       viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
