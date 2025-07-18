@@ -28,7 +28,7 @@ export default function IndividualTaxPayer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${basePath}/jtb/individuals`, {
+        const res = await fetch(`api/${basePath}/jtb/individuals`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
