@@ -1,58 +1,68 @@
-import React, { useEffect, useState } from 'react';
-import { usePage, router } from '@inertiajs/react';
-import { FaUserCircle } from 'react-icons/fa';
+import React, { useEffect } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { FaUsers, FaBuilding, FaPlusCircle, FaFileInvoice } from 'react-icons/fa';
+import DashboardLayout from '@/Layouts/DashboardLayout';
+import { toast } from 'react-hot-toast';
 
-export default function DashboardLayout({ children }) {
-  const { auth } = usePage().props;
-  const user = auth?.user;
+export default function Dashboard() {
+  const { props } = usePage();
+  const demoUser = props.auth?.user || { name: 'John Doe' };
 
-  const [showDropdown, setShowDropdown] = useState(false);
-
-  const toggleDropdown = () => setShowDropdown(!showDropdown);
-
-  // 🔐 Redirect if session/token is expired (i.e., no user in props)
+  // 👉 Log the authenticated user
   useEffect(() => {
-    if (!user) {
-      router.visit(route('login'));
+    console.log('Authenticated User:', props.auth?.user);
+  }, [props.auth?.user]);
+
+  // ✅ Example toast (optional, for success message)
+  useEffect(() => {
+    if (props.flash?.success) {
+      toast.success(props.flash.success);
     }
-  }, [user]);
+  }, [props.flash]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 bg-white shadow">
-        <div className="text-2xl font-bold text-green-700">Oyo Joint Tax Board</div>
-        <div className="relative">
-          <button
-            className="flex items-center space-x-2"
-            onClick={toggleDropdown}
-          >
-            <FaUserCircle className="text-2xl text-green-700" />
-            <span className="text-sm text-gray-700">{user?.name || 'Guest'}</span>
-          </button>
-          {showDropdown && (
-            <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
-              <a
-                href="#"
-                className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
-              >
-                Profile
-              </a>
-              <a
-                href={route('logout')}
-                method="post"
-                as="button"
-                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
-              >
-                Logout
-              </a>
-            </div>
-          )}
-        </div>
-      </header>
+    <>
+      <Head title="Dashboard" />
+      <DashboardLayout>
+        <h1 className="text-xl font-semibold text-green-800 mb-6">
+          Welcome, {demoUser.name}
+        </h1>
 
-      {/* Page Content */}
-      <main className="p-6">{children}</main>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card
+            title="Individual Taxpayers"
+            icon={<FaUsers className="text-4xl text-green-600" />}
+            route="/individual"
+          />
+          <Card
+            title="Non-Individual Taxpayers"
+            icon={<FaBuilding className="text-4xl text-green-600" />}
+            route="/non-individual"
+          />
+          <Card
+            title="Add Tax Record"
+            icon={<FaFileInvoice className="text-4xl text-green-600" />}
+            route="/add-tax-record"
+          />
+          <Card
+            title="Add Asset Details"
+            icon={<FaPlusCircle className="text-4xl text-green-600" />}
+            route="/add-asset"
+          />
+        </div>
+      </DashboardLayout>
+    </>
+  );
+}
+
+function Card({ title, icon, route }) {
+  return (
+    <div
+      onClick={() => router.visit(route)}
+      className="cursor-pointer flex flex-col items-center justify-center p-6 bg-white rounded-lg shadow hover:shadow-lg transition"
+    >
+      <div className="mb-4">{icon}</div>
+      <h2 className="text-lg font-medium text-green-800 text-center">{title}</h2>
     </div>
   );
 }
