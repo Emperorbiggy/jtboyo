@@ -17,7 +17,7 @@ export default function IndividualTaxPayer() {
 
   const [fromDate, setFromDate] = useState(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 7);
+    date.setDate(date.getDate() - 6);
     return date;
   });
 
