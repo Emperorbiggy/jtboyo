@@ -62,29 +62,34 @@ class JtbService
 }
 public function getIndividualTaxpayers(string $token, string $fromDate, string $toDate)
 {
+    $url = $this->baseUrl . '/SBIR/Individual?tokenid=' . $token;
+
+    // Ensure date format is dd-MM-yyyy
+    $formattedFrom = \Carbon\Carbon::parse($fromDate)->format('d-m-Y');
+    $formattedTo = \Carbon\Carbon::parse($toDate)->format('d-m-Y');
+
+    Log::info('Fetching JTB Individual Taxpayers', [
+        'endpoint' => $url,
+        'fromDate' => $formattedFrom,
+        'toDate' => $formattedTo,
+    ]);
+
     try {
-        $endpoint = $this->baseUrl . "/SBIR/Individual?tokenid={$token}";
-
-        Log::info('Fetching JTB Individual Taxpayers', compact('endpoint', 'fromDate', 'toDate'));
-
         $response = Http::withHeaders([
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
-        ])->post($endpoint, [
-            'fromdate' => $fromDate,
-            'todate' => $toDate,
+        ])->post($url, [
+            'fromdate' => $formattedFrom,
+            'todate' => $formattedTo,
         ]);
 
-        if ($response->ok()) {
-            return $response->json();
-        }
+        Log::info('JTB Response', ['status' => $response->status(), 'body' => $response->body()]);
 
-        Log::error('Failed JTB Individual API call', ['status' => $response->status(), 'body' => $response->body()]);
+        return $response->json();
     } catch (\Exception $e) {
-        Log::error('JTB individual taxpayers error: ' . $e->getMessage());
+        Log::error('Error fetching JTB taxpayers', ['message' => $e->getMessage()]);
+        return ['success' => false, 'message' => 'Request failed.'];
     }
-
-    return ['success' => false, 'message' => 'Request failed'];
 }
 
 
