@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usePage, router } from '@inertiajs/react';
+import { usePage, router, Link } from '@inertiajs/react';
 import { FaUserCircle } from 'react-icons/fa';
 
 export default function DashboardLayout({ children }) {
@@ -10,13 +10,13 @@ export default function DashboardLayout({ children }) {
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
 
-  // 🔐 Redirect if session/token is expired (i.e., no user in props)
+  // 🔐 Redirect if session/token is expired
   useEffect(() => {
     if (!user) {
       router.visit(route('login'));
     }
 
-    // 🧪 Console log the shared token info
+    // 🧪 Console log token info
     console.log('🔐 JTB Token:', jtb_token);
     console.log('📆 Token Expires At:', jtb_token_expires_at);
   }, [user, jtb_token, jtb_token_expires_at]);
@@ -36,20 +36,20 @@ export default function DashboardLayout({ children }) {
           </button>
           {showDropdown && (
             <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
-              <a
+              <Link
                 href="#"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
               >
                 Profile
-              </a>
-              <a
+              </Link>
+              <Link
                 href={route('logout')}
                 method="post"
                 as="button"
                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50"
               >
                 Logout
-              </a>
+              </Link>
             </div>
           )}
         </div>

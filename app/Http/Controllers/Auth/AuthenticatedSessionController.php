@@ -79,12 +79,19 @@ class AuthenticatedSessionController extends Controller
      * Destroy an authenticated session.
      */
     public function destroy(Request $request): RedirectResponse
-    {
-        Auth::guard('web')->logout();
+{
+    // Logout user
+    Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    // Explicitly forget JTB token session data
+    $request->session()->forget('jtb_token');
+    $request->session()->forget('jtb_token_expires_at');
 
-        return redirect('/');
-    }
+    // Invalidate session and regenerate CSRF token
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/');
+}
+
 }
