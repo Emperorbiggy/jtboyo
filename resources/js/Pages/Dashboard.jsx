@@ -3,6 +3,8 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { FaUsers, FaBuilding, FaPlusCircle, FaFileInvoice } from 'react-icons/fa';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
+const basePath = '/app/public'; // Adjust based on your actual deployment
+
 export default function Dashboard() {
   const { props } = usePage();
   const demoUser = props.auth?.user || { name: 'John Doe' };
@@ -19,22 +21,22 @@ export default function Dashboard() {
           <Card
             title="Individual Taxpayers"
             icon={<FaUsers className="text-4xl text-green-600" />}
-            route="/individual"
+            route={`${basePath}/individual`}
           />
           <Card
             title="Non-Individual Taxpayers"
             icon={<FaBuilding className="text-4xl text-green-600" />}
-            route="/non-individual"
+            route={`${basePath}/non-individual`}
           />
           <Card
             title="Add Tax Record"
             icon={<FaFileInvoice className="text-4xl text-green-600" />}
-            route="/add-tax-record"
+            route={`${basePath}/add-tax-record`}
           />
           <Card
             title="Add Asset Details"
             icon={<FaPlusCircle className="text-4xl text-green-600" />}
-            route="/add-asset"
+            route={`${basePath}/add-asset`}
           />
         </div>
       </DashboardLayout>
