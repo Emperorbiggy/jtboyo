@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
-
+const basePath = '/app/public';
 export default function AddRecord() {
   const [form, setForm] = useState({
     jtb_tin: '',
@@ -42,8 +42,8 @@ export default function AddRecord() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-green-800">Add Tax Record</h1>
           <button
-            onClick={() => router.visit('/dashboard')}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            onClick={() => window.location.href = `${basePath}/dashboard`}
+            className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition"
           >
             Back to Dashboard
           </button>
