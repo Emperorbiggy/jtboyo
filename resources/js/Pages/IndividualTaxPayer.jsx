@@ -25,38 +25,38 @@ export default function IndividualTaxPayer() {
 
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`api/jtb/individuals`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    Accept: 'application/json',
-  },
-  body: JSON.stringify({
-    fromDate,
-    toDate,
-  }),
-});
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await fetch(`api/jtb/individuals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          fromDate,
+          toDate,
+        }),
+      });
 
+      // Log full response object
+      console.log('Response status:', res.status);
 
-        if (res.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
+      const data = await res.json();
+      console.log('Response data:', data);
 
-        const data = await res.json();
-        if (data.success && data.taxpayers) {
-          setTaxpayers(data.taxpayers);
-        }
-      } catch (error) {
-        console.error('Failed to fetch taxpayers', error);
+      if (data.success && data.taxpayers) {
+        setTaxpayers(data.taxpayers);
       }
-    };
+    } catch (error) {
+      console.error('Failed to fetch taxpayers:', error);
+    }
+  };
 
-    fetchData();
-  }, [fromDate, toDate]);
+  fetchData();
+}, [fromDate, toDate]);
+
 
   const filteredTaxpayers = taxpayers.filter((t) => {
     const matchSearch = t.tin?.toLowerCase().includes(search.toLowerCase()) ||
