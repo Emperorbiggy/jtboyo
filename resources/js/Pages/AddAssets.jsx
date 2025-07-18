@@ -59,7 +59,7 @@ export default function AddAssets() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-green-800">Add Asset Record</h1>
           <button
-            onClick={() => window.location.href = `/`}
+            onClick={() => window.location.href = `${basePath}/individual`}
             className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition"
           >
             Back to Dashboard

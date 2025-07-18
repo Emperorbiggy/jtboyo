@@ -7,6 +7,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FaSearch } from 'react-icons/fa';
+const basePath = '/app/public';
 
 const demoData = [
   {
@@ -165,11 +166,12 @@ export default function NonIndividualTaxPayers() {
         {/* Top Controls */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <Link
-            href="/dashboard"
-            className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
-          >
-            ← Back to Dashboard
-          </Link>
+  href={`${basePath}/dashboard`}
+  className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+>
+  ← Back to Dashboard
+</Link>
+
 
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex items-center border px-2 py-1 rounded">
