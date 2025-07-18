@@ -28,17 +28,18 @@ export default function IndividualTaxPayer() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/jtb/individuals', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-          body: JSON.stringify({
-            fromDate: fromDate.toLocaleDateString('en-GB'),
-            toDate: toDate.toLocaleDateString('en-GB'),
-          }),
-        });
+        const res = await fetch(`${basePath}/jtb/individuals`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+  },
+  body: JSON.stringify({
+    fromDate,
+    toDate,
+  }),
+});
+
 
         if (res.status === 401) {
           window.location.href = '/login';
