@@ -38,6 +38,8 @@ Route::get('/add-asset', function () {
     return Inertia::render('AddAssets');
 });
 Route::get('/jtb/token', [JtbController::class, 'getToken']);
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
