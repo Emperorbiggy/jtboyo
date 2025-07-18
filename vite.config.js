@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
-    base: '/app/public/build/', // 👈 ADD THIS
+    base: '/app/public/', 
     plugins: [
         laravel({
             input: 'resources/js/app.jsx',
