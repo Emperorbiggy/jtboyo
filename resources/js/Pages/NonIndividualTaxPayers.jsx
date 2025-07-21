@@ -13,7 +13,7 @@ export default function NonIndividualTaxPayers() {
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [fromDate, setFromDate] = useState(new Date('2018-01-01'));
+  const [fromDate, setFromDate] = useState(new Date('2024-01-01'));
   const [toDate, setToDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -22,6 +22,15 @@ export default function NonIndividualTaxPayers() {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Validate date range (max 7 days)
+      const diffInMs = toDate - fromDate;
+      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+      if (diffInDays > 7) {
+        alert('The date range cannot exceed 7 days.');
+        return;
+      }
+
       setLoading(true);
       try {
         const res = await fetch('/app/public/api/jtb/non-individuals', {
@@ -47,7 +56,7 @@ export default function NonIndividualTaxPayers() {
       }
     };
 
-    fetchData();
+    if (fromDate && toDate) fetchData();
   }, [fromDate, toDate]);
 
   const filtered = data.filter((item) => {
