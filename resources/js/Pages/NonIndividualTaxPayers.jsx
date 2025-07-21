@@ -10,11 +10,15 @@ import { FaSearch } from 'react-icons/fa';
 const basePath = '/app/public';
 
 export default function NonIndividualTaxPayers() {
+  const today = new Date();
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(today.getDate() - 6);
+
   const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [fromDate, setFromDate] = useState(new Date('2024-01-01'));
-  const [toDate, setToDate] = useState(new Date());
+  const [fromDate, setFromDate] = useState(sevenDaysAgo);
+  const [toDate, setToDate] = useState(today);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
