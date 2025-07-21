@@ -59,5 +59,23 @@ class JtbController extends Controller
     $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
     return response()->json($data);
 }
+public function fetchNonIndividualTaxpayers(Request $request)
+{
+    $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
+    $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    Log::info('JTB Token from session (Non-Individual):', ['token' => $token, 'expires_at' => $expiresAt]);
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $data = $this->jtbService->getNonIndividualTaxpayers($token, $fromDate, $toDate);
+    return response()->json($data);
+}
 
 }
