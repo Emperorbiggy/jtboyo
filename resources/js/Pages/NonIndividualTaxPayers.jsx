@@ -24,7 +24,7 @@ export default function NonIndividualTaxPayers() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/jtb/non-individuals', {
+        const res = await fetch('/app/public/api/jtb/non-individuals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
