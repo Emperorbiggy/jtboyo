@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import axios from 'axios';
 
-const basePath = '/app/public';
+// const basePath = '/app/public';
 
 export default function AddRecord() {
   const [form, setForm] = useState({
@@ -39,7 +39,7 @@ export default function AddRecord() {
     setMessage(null);
 
     try {
-      const response = await axios.post('/app/public/api/jtb/add-tax-record', form);
+      const response = await axios.post('/api/jtb/add-tax-record', form);
       setMessage({ type: 'success', text: 'Record submitted successfully!' });
       setForm({
         jtb_tin: '',
@@ -77,7 +77,7 @@ export default function AddRecord() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-semibold text-green-800">Add Tax Record</h1>
           <button
-            onClick={() => window.location.href = `${basePath}/dashboard`}
+            onClick={() => window.location.href = `/dashboard`}
             className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition"
           >
             Back to Dashboard

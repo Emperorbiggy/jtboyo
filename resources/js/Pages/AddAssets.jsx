@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
-const basePath = '/app/public';
+// const basePath = '/app/public';
 
 export default function AddAssets() {
   const [form, setForm] = useState({
@@ -40,7 +40,7 @@ export default function AddAssets() {
     setLoading(true);
 
     try {
-      const response = await fetch('/app/public/api/jtb/submit-asset', {
+      const response = await fetch('/api/jtb/submit-asset', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ export default function AddAssets() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-green-800">Add Asset Record</h1>
           <button
-            onClick={() => window.location.href = `${basePath}/dashboard`}
+            onClick={() => window.location.href = `/dashboard`}
             className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800 transition"
           >
             Back to Dashboard

@@ -7,7 +7,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FaSearch } from 'react-icons/fa';
 
-const basePath = '/app/public';
+// const basePath = '/app/public';
 
 export default function NonIndividualTaxPayers() {
   const today = new Date();
@@ -37,7 +37,7 @@ export default function NonIndividualTaxPayers() {
 
       setLoading(true);
       try {
-        const res = await fetch('/app/public/api/jtb/non-individuals', {
+        const res = await fetch('/api/jtb/non-individuals', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ export default function NonIndividualTaxPayers() {
         {/* Top Controls */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <Link
-            href={`${basePath}/dashboard`}
+            href={`/dashboard`}
             className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
           >
             ← Back to Dashboard

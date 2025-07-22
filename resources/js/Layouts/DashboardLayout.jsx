@@ -17,8 +17,8 @@ export default function DashboardLayout({ children }) {
     }
 
     // 🧪 Console log token info
-    console.log('🔐 JTB Token:', jtb_token);
-    console.log('📆 Token Expires At:', jtb_token_expires_at);
+    // console.log('🔐 JTB Token:', jtb_token);
+    // console.log('📆 Token Expires At:', jtb_token_expires_at);
   }, [user, jtb_token, jtb_token_expires_at]);
 
   return (
