@@ -155,7 +155,20 @@ public function submitAsset(Request $request)
 {
     $input = $request->all();
 
-    // Validate incoming request
+    // ✅ Convert date to expected d/m/Y format if provided
+    if (!empty($input['date_acquired'])) {
+        try {
+            $input['date_acquired'] = \Carbon\Carbon::parse($input['date_acquired'])->format('d/m/Y');
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format.',
+                'errors' => ['date_acquired' => ['Invalid date format.']],
+            ], 422);
+        }
+    }
+
+    // ✅ Now validate with expected format
     $validator = Validator::make($input, [
         'tin' => 'required|string',
         'location' => 'required|string',
@@ -173,6 +186,7 @@ public function submitAsset(Request $request)
         ], 422);
     }
 
+    // ✅ Check token
     $token = session('jtb_token');
     $expiresAt = session('jtb_token_expires_at');
 
@@ -181,10 +195,9 @@ public function submitAsset(Request $request)
         return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
     }
 
-    // Prepare payload (you may normalize fields if needed)
+    // ✅ Proceed with validated payload
     $payload = $validator->validated();
 
-    // Call the service
     $response = $this->jtbService->addAssetDetails($payload, $token);
 
     return response()->json($response);

@@ -81,67 +81,80 @@ export default function AddAssets() {
         </div>
 
         <form
-          onSubmit={handleSubmit}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow"
-        >
-          <Input
-            label="TIN"
-            name="tin"
-            value={form.tin}
-            onChange={handleChange}
-            error={errors.tin}
-          />
-          <Input
-            label="Location"
-            name="location"
-            value={form.location}
-            onChange={handleChange}
-            error={errors.location}
-          />
-          <Input
-            label="Asset Type"
-            name="asset_type"
-            value={form.asset_type}
-            onChange={handleChange}
-            error={errors.asset_type}
-          />
-          <Input
-            label="Asset Value"
-            name="asset_value"
-            value={form.asset_value}
-            onChange={handleChange}
-            error={errors.asset_value}
-          />
-          <DateInput
-            label="Date Acquired"
-            name="date_acquired"
-            value={form.date_acquired}
-            onChange={handleChange}
-            error={errors.date_acquired}
-          />
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              name="description"
-              value={form.description}
-              onChange={handleChange}
-              className="w-full border border-gray-300 p-2 rounded"
-              rows={3}
-            />
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
-            )}
-          </div>
+  onSubmit={handleSubmit}
+  className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow"
+>
+  <Input
+    label="TIN *"
+    name="tin"
+    value={form.tin}
+    required
+    onChange={handleChange}
+    error={errors.tin}
+  />
 
-          <div className="md:col-span-2 flex justify-end">
-            <button
-              type="submit"
-              className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded transition"
-            >
-              Submit Asset Record
-            </button>
-          </div>
-        </form>
+  <Input
+    label="Location *"
+    name="location"
+    value={form.location}
+    required
+    onChange={handleChange}
+    error={errors.location}
+  />
+
+  <Input
+    label="Asset Type *"
+    name="asset_type"
+    value={form.asset_type}
+    required
+    onChange={handleChange}
+    error={errors.asset_type}
+  />
+
+  <Input
+    label="Asset Value *"
+    name="asset_value"
+    value={form.asset_value}
+    required
+    onChange={handleChange}
+    error={errors.asset_value}
+  />
+
+  <DateInput
+    label="Date Acquired *"
+    name="date_acquired"
+    value={form.date_acquired}
+    required
+    onChange={handleChange}
+    error={errors.date_acquired}
+  />
+
+  <div className="md:col-span-2">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Description
+    </label>
+    <textarea
+      name="description"
+      value={form.description}
+      onChange={handleChange}
+      className="w-full border border-gray-300 p-2 rounded"
+      rows={3}
+    />
+    {errors.description && (
+      <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+    )}
+  </div>
+
+  <div className="md:col-span-2 flex justify-end">
+    <button
+      type="submit"
+      className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded transition"
+    >
+      Submit Asset Record
+    </button>
+  </div>
+</form>
+
       </DashboardLayout>
     </>
   );
