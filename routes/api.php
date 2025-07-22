@@ -14,4 +14,5 @@ Route::middleware([
 ])->group(function () {
     Route::post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
     Route::post('/jtb/non-individuals', [JtbController::class, 'fetchNonIndividualTaxpayers']);
+    Route::post('/jtb/add-tax-record', [JtbController::class, 'submitTaxRecord']);
 });

@@ -1,9 +1,10 @@
-// resources/js/Pages/AddRecord.jsx
-
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
+import axios from 'axios';
+
 const basePath = '/app/public';
+
 export default function AddRecord() {
   const [form, setForm] = useState({
     jtb_tin: '',
@@ -25,14 +26,48 @@ export default function AddRecord() {
     expirydate: '',
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState(null);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitted data:', form);
-    // Here you'd typically post the form to backend
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const response = await axios.post('/api/jtb/add-tax-record', form);
+      setMessage({ type: 'success', text: 'Record submitted successfully!' });
+      setForm({
+        jtb_tin: '',
+        tcc_number: '',
+        tax_period: '',
+        turnover: '',
+        assessable_profit: '',
+        total_profit: '',
+        tax_payable: '',
+        tax_paid: '',
+        payment_date: '',
+        tax_type: '',
+        tax_authority: '',
+        tax_office: '',
+        EmployerName: '',
+        TaxPayerAddress: '',
+        TaxPayerName: '',
+        Sourceofincome: '',
+        expirydate: '',
+      });
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.message || 'An error occurred while submitting.',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -48,6 +83,12 @@ export default function AddRecord() {
             Back to Dashboard
           </button>
         </div>
+
+        {message && (
+          <div className={`mb-4 p-3 rounded ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
+            {message.text}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -109,9 +150,10 @@ export default function AddRecord() {
           <div className="pt-4">
             <button
               type="submit"
-              className="px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800"
+              disabled={submitting}
+              className="px-6 py-2 bg-green-700 text-white rounded hover:bg-green-800 disabled:opacity-50"
             >
-              Submit Record
+              {submitting ? 'Submitting...' : 'Submit Record'}
             </button>
           </div>
         </form>

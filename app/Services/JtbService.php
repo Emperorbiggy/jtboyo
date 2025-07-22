@@ -129,4 +129,43 @@ class JtbService
             return ['success' => false, 'message' => 'Request failed.'];
         }
     }
+    
+    public function addTaxRecord(array $payload, string $token)
+    {
+        $url = $this->baseUrl . '/SBIR/AddTaxRecord?tokenid=' . $token;
+
+        // Format required date fields
+        if (isset($payload['payment_date'])) {
+            $payload['payment_date'] = Carbon::parse($payload['payment_date'])->format('d-m-Y');
+        }
+
+        if (isset($payload['tcc_expiry_date'])) {
+            $payload['tcc_expiry_date'] = Carbon::parse($payload['tcc_expiry_date'])->format('d-m-Y');
+        }
+
+        Log::info('Sending Add Tax Record Request to JTB', [
+            'url' => $url,
+            'payload' => $payload
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            Log::info('Add Tax Record Response from JTB', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error adding JTB tax record', [
+                'message' => $e->getMessage(),
+                'payload' => $payload,
+            ]);
+            return ['success' => false, 'message' => 'AddTaxRecord failed.'];
+        }
+    }
 }
