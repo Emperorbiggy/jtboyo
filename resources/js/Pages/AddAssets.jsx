@@ -35,7 +35,7 @@ export default function AddAssets() {
   }
 
   try {
-    const response = await fetch('/api/jtb/submit-asset', {
+    const response = await fetch('/app/public/api/jtb/submit-asset', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
