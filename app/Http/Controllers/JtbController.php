@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Services\JtbService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Validator;
+
 use Carbon\Carbon;
 
 class JtbController extends Controller
