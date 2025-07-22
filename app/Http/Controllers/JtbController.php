@@ -151,5 +151,43 @@ class JtbController extends Controller
 
     return response()->json($response);
 }
+public function submitAsset(Request $request)
+{
+    $input = $request->all();
+
+    // Validate incoming request
+    $validator = Validator::make($input, [
+        'tin' => 'required|string',
+        'location' => 'required|string',
+        'asset_type' => 'required|string',
+        'asset_value' => 'required|numeric',
+        'date_acquired' => 'required|date_format:d/m/Y',
+        'description' => 'nullable|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
+    }
+
+    // Prepare payload (you may normalize fields if needed)
+    $payload = $validator->validated();
+
+    // Call the service
+    $response = $this->jtbService->addAssetDetails($payload, $token);
+
+    return response()->json($response);
+}
 
 }

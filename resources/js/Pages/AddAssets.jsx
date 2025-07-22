@@ -20,37 +20,51 @@ export default function AddAssets() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setErrors({});
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  setErrors({});
 
-    const newErrors = {};
-    Object.entries(form).forEach(([key, value]) => {
-      if (!value) newErrors[key] = 'This field is required';
+  const newErrors = {};
+  Object.entries(form).forEach(([key, value]) => {
+    if (!value) newErrors[key] = 'This field is required';
+  });
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/jtb/submit-asset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(form),
     });
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+    const result = await response.json();
+
+    if (response.ok && result.success) {
+      alert('Asset added successfully!');
+      setForm({
+        tin: '',
+        location: '',
+        asset_type: '',
+        asset_value: '',
+        date_acquired: '',
+        description: '',
+      });
+    } else {
+      alert(result.message || 'Something went wrong.');
     }
+  } catch (error) {
+    console.error('Error:', error);
+    alert('Network error. Please try again.');
+  }
+};
 
-    router.post('/add-assets', form, {
-      onSuccess: () => {
-        alert('Asset added successfully!');
-        setForm({
-          tin: '',
-          location: '',
-          asset_type: '',
-          asset_value: '',
-          date_acquired: '',
-          description: '',
-        });
-      },
-      onError: (error) => {
-        setErrors(error);
-      },
-    });
-  };
 
   return (
     <>

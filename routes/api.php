@@ -15,4 +15,5 @@ Route::middleware([
     Route::post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
     Route::post('/jtb/non-individuals', [JtbController::class, 'fetchNonIndividualTaxpayers']);
     Route::post('/jtb/add-tax-record', [JtbController::class, 'submitTaxRecord']);
+    Route::post('/jtb/submit-asset', [JtbController::class, 'submitAsset']);
 });

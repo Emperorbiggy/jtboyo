@@ -168,4 +168,39 @@ class JtbService
             return ['success' => false, 'message' => 'AddTaxRecord failed.'];
         }
     }
+        public function addAssetDetails(array $payload, string $token)
+    {
+        $url = $this->baseUrl . '/SBIR/AddAssetDetails?tokenid=' . $token;
+
+        // Format the date field
+        if (isset($payload['date_acquired'])) {
+            $payload['date_acquired'] = Carbon::parse($payload['date_acquired'])->format('d-m-Y');
+        }
+
+        Log::info('Sending Add Asset Details Request to JTB', [
+            'url' => $url,
+            'payload' => $payload
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            Log::info('Add Asset Details Response from JTB', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error adding asset details to JTB', [
+                'message' => $e->getMessage(),
+                'payload' => $payload,
+            ]);
+            return ['success' => false, 'message' => 'AddAssetDetails failed.'];
+        }
+    }
+
 }
