@@ -39,12 +39,12 @@ export default function AddRecord() {
     setMessage(null);
 
     try {
-      const response = await axios.post('/api/jtb/add-tax-record', form);
+      const response = await axios.post('/app/public/api/jtb/add-tax-record', form);
       setMessage({ type: 'success', text: 'Record submitted successfully!' });
       setForm({
         jtb_tin: '',
         tcc_number: '',
-        tax_period: '',
+        tax_period: 'jan 2019 - Dec 2019',
         turnover: '',
         assessable_profit: '',
         total_profit: '',
