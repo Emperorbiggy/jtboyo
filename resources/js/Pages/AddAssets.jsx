@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
 const basePath = '/app/public';
@@ -15,56 +15,62 @@ export default function AddAssets() {
   });
 
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setErrors({});
+    e.preventDefault();
+    setErrors({});
+    setMessage({ type: '', text: '' });
 
-  const newErrors = {};
-  Object.entries(form).forEach(([key, value]) => {
-    if (!value) newErrors[key] = 'This field is required';
-  });
-
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-
-  try {
-    const response = await fetch('/app/public/api/jtb/submit-asset', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-      body: JSON.stringify(form),
+    const newErrors = {};
+    Object.entries(form).forEach(([key, value]) => {
+      if (!value) newErrors[key] = 'This field is required';
     });
 
-    const result = await response.json();
-
-    if (response.ok && result.success) {
-      alert('Asset added successfully!');
-      setForm({
-        tin: '',
-        location: '',
-        asset_type: '',
-        asset_value: '',
-        date_acquired: '',
-        description: '',
-      });
-    } else {
-      alert(result.message || 'Something went wrong.');
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
-  } catch (error) {
-    console.error('Error:', error);
-    alert('Network error. Please try again.');
-  }
-};
 
+    setLoading(true);
+
+    try {
+      const response = await fetch('/app/public/api/jtb/submit-asset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.ResponseCode === '001') {
+        setMessage({ type: 'success', text: result.ResponseDescription || 'Asset added successfully!' });
+        setForm({
+          tin: '',
+          location: '',
+          asset_type: '',
+          asset_value: '',
+          date_acquired: '',
+          description: '',
+        });
+      } else {
+        setMessage({ type: 'error', text: result.ResponseDescription || 'Something went wrong.' });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setMessage({ type: 'error', text: 'Network error. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -80,81 +86,47 @@ export default function AddAssets() {
           </button>
         </div>
 
+        {/* Success/Error Message Banner */}
+        {message.text && (
+          <div className={`mb-4 p-4 rounded ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
+            {message.text}
+          </div>
+        )}
+
         <form
-  onSubmit={handleSubmit}
-  className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow"
->
-  <Input
-    label="TIN *"
-    name="tin"
-    value={form.tin}
-    required
-    onChange={handleChange}
-    error={errors.tin}
-  />
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-lg shadow"
+        >
+          <Input label="TIN *" name="tin" value={form.tin} onChange={handleChange} error={errors.tin} />
+          <Input label="Location *" name="location" value={form.location} onChange={handleChange} error={errors.location} />
+          <Input label="Asset Type *" name="asset_type" value={form.asset_type} onChange={handleChange} error={errors.asset_type} />
+          <Input label="Asset Value *" name="asset_value" value={form.asset_value} onChange={handleChange} error={errors.asset_value} />
+          <DateInput label="Date Acquired *" name="date_acquired" value={form.date_acquired} onChange={handleChange} error={errors.date_acquired} />
 
-  <Input
-    label="Location *"
-    name="location"
-    value={form.location}
-    required
-    onChange={handleChange}
-    error={errors.location}
-  />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+            <textarea
+              name="description"
+              value={form.description}
+              onChange={handleChange}
+              className="w-full border border-gray-300 p-2 rounded"
+              rows={3}
+            />
+            {errors.description && (
+              <p className="text-red-500 text-sm mt-1">{errors.description}</p>
+            )}
+          </div>
 
-  <Input
-    label="Asset Type *"
-    name="asset_type"
-    value={form.asset_type}
-    required
-    onChange={handleChange}
-    error={errors.asset_type}
-  />
-
-  <Input
-    label="Asset Value *"
-    name="asset_value"
-    value={form.asset_value}
-    required
-    onChange={handleChange}
-    error={errors.asset_value}
-  />
-
-  <DateInput
-    label="Date Acquired *"
-    name="date_acquired"
-    value={form.date_acquired}
-    required
-    onChange={handleChange}
-    error={errors.date_acquired}
-  />
-
-  <div className="md:col-span-2">
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Description
-    </label>
-    <textarea
-      name="description"
-      value={form.description}
-      onChange={handleChange}
-      className="w-full border border-gray-300 p-2 rounded"
-      rows={3}
-    />
-    {errors.description && (
-      <p className="text-red-500 text-sm mt-1">{errors.description}</p>
-    )}
-  </div>
-
-  <div className="md:col-span-2 flex justify-end">
-    <button
-      type="submit"
-      className="bg-green-700 hover:bg-green-800 text-white px-6 py-2 rounded transition"
-    >
-      Submit Asset Record
-    </button>
-  </div>
-</form>
-
+          <div className="md:col-span-2 flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className={`px-6 py-2 rounded text-white transition ${loading ? 'bg-gray-400' : 'bg-green-700 hover:bg-green-800'}`}
+            >
+              {loading ? 'Submitting...' : 'Submit Asset Record'}
+            </button>
+          </div>
+        </form>
       </DashboardLayout>
     </>
   );
@@ -177,7 +149,7 @@ function Input({ label, name, value, onChange, error }) {
   );
 }
 
-// Date Input Component using HTML date input
+// Reusable Date Input Component
 function DateInput({ label, name, value, onChange, error }) {
   return (
     <div>
