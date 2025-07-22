@@ -86,37 +86,68 @@ class JtbController extends Controller
      * Submit a tax record to JTB.
      */
     public function submitTaxRecord(Request $request)
-    {
-        $validated = $request->validate([
-            'jtb_tin' => 'required|string',
-            'tcc_number' => 'required|string',
-            'tax_period' => 'required|string',
-            'turnover' => 'required|numeric',
-            'assessable_profit' => 'required|numeric',
-            'total_profit' => 'required|numeric',
-            'tax_payable' => 'required|numeric',
-            'tax_paid' => 'required|numeric',
-            'tax_type' => 'required|string',
-            'tax_authority' => 'required|string',
-            'employer_name' => 'required|string',
-            'taxpayer_address' => 'required|string',
-            'taxpayer_name' => 'required|string',
-            'source_of_income' => 'required|string',
-            'payment_date' => 'required|date',
-            'tcc_expiry_date' => 'required|date',
-        ]);
+{
+    // Manually map old keys to expected ones
+    $input = $request->all();
 
-        $token = session('jtb_token');
-        $expiresAt = session('jtb_token_expires_at');
+    $mapped = [
+        'jtb_tin' => $input['jtb_tin'] ?? null,
+        'tcc_number' => $input['tcc_number'] ?? null,
+        'tax_period' => $input['tax_period'] ?? null,
+        'turnover' => $input['turnover'] ?? null,
+        'assessable_profit' => $input['assessable_profit'] ?? null,
+        'total_profit' => $input['total_profit'] ?? null,
+        'tax_payable' => $input['tax_payable'] ?? null,
+        'tax_paid' => $input['tax_paid'] ?? null,
+        'tax_type' => $input['tax_type'] ?? null,
+        'tax_authority' => $input['tax_authority'] ?? null,
+        'tax_office' => $input['tax_office'] ?? null,
+        'employer_name' => $input['EmployerName'] ?? $input['employer_name'] ?? null,
+        'taxpayer_address' => $input['TaxPayerAddress'] ?? $input['taxpayer_address'] ?? null,
+        'taxpayer_name' => $input['TaxPayerName'] ?? $input['taxpayer_name'] ?? null,
+        'source_of_income' => $input['Sourceofincome'] ?? $input['source_of_income'] ?? null,
+        'payment_date' => $input['payment_date'] ?? null,
+        'tcc_expiry_date' => $input['expirydate'] ?? $input['tcc_expiry_date'] ?? null,
+    ];
 
-        if (!$token || now()->greaterThan($expiresAt)) {
-            auth()->logout();
-            return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-        }
+    $validated = Validator::make($mapped, [
+        'jtb_tin' => 'required|string',
+        'tcc_number' => 'required|string',
+        'tax_period' => 'required|string',
+        'turnover' => 'required|numeric',
+        'assessable_profit' => 'required|numeric',
+        'total_profit' => 'required|numeric',
+        'tax_payable' => 'required|numeric',
+        'tax_paid' => 'required|numeric',
+        'tax_type' => 'required|string',
+        'tax_authority' => 'required|string',
+        'employer_name' => 'required|string',
+        'taxpayer_address' => 'required|string',
+        'taxpayer_name' => 'required|string',
+        'source_of_income' => 'required|string',
+        'payment_date' => 'required|date',
+        'tcc_expiry_date' => 'required|date',
+    ]);
 
-        // Call service method to send the payload
-        $response = $this->jtbService->addTaxRecord($validated, $token);
-
-        return response()->json($response);
+    if ($validated->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed.',
+            'errors' => $validated->errors(),
+        ], 422);
     }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $response = $this->jtbService->addTaxRecord($validated->validated(), $token);
+
+    return response()->json($response);
+}
+
 }
