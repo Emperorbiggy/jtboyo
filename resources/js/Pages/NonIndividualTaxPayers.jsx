@@ -8,9 +8,6 @@ import { saveAs } from 'file-saver';
 import { FaSearch } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 
-
-// const basePath = '/app/public';
-
 export default function NonIndividualTaxPayers() {
   const today = new Date();
   const sevenDaysAgo = new Date();
@@ -27,73 +24,76 @@ export default function NonIndividualTaxPayers() {
   const itemsPerPage = 10;
 
   useEffect(() => {
-  const fetchData = async () => {
-    const diffInMs = toDate - fromDate;
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+    const fetchData = async () => {
+      const diffInMs = toDate - fromDate;
+      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
-    if (diffInDays > 7) {
-      toast.error('The date range cannot exceed 7 days.');
-      return;
-    }
+      if (diffInDays > 7) {
+        toast.error('The date range cannot exceed 7 days.');
+        return;
+      }
 
-    setLoading(true);
-    try {
-      const res = await fetch('/api/jtb/non-individuals', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          fromDate: fromDate.toISOString().split('T')[0],
-          toDate: toDate.toISOString().split('T')[0],
-        }),
-      });
+      setLoading(true);
+      try {
+        const res = await fetch('/api/jtb/non-individuals', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            fromDate: fromDate.toISOString().split('T')[0],
+            toDate: toDate.toISOString().split('T')[0],
+          }),
+        });
 
-      if (!res.ok) throw new Error('Failed to fetch');
+        if (!res.ok) throw new Error('Failed to fetch');
 
-      const result = await res.json();
-      const taxpayerList = result?.TaxpayerList || [];
+        const result = await res.json();
+        const taxpayerList = result?.TaxpayerList || [];
 
-      setData(taxpayerList);
-      console.log('First taxpayer record:', taxpayerList[0]);
-      toast.success(`Fetched ${taxpayerList.length} taxpayer records.`);
-    } catch (error) {
-      console.error('Error fetching non-individual taxpayers:', error);
-      toast.error('Error fetching data.');
-    } finally {
-      setLoading(false);
-    }
-  };
+        setData(taxpayerList);
 
-  if (fromDate && toDate) fetchData();
-}, [fromDate, toDate]);
+        if (taxpayerList.length > 0) {
+          console.log('First taxpayer record:', taxpayerList[0]);
+        } else {
+          console.log('No taxpayer records returned.');
+        }
 
+        toast.success(`Fetched ${taxpayerList.length} taxpayer record(s).`);
+      } catch (error) {
+        console.error('Error fetching non-individual taxpayers:', error);
+        toast.error('Error fetching data.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    if (fromDate && toDate) fetchData();
+  }, [fromDate, toDate]);
 
   const normalizeDate = (date) => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-};
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
 
-const filtered = data.filter((item) => {
-  const searchMatch =
-    item.tin?.toLowerCase().includes(search.toLowerCase()) ||
-    item.registered_name?.toLowerCase().includes(search.toLowerCase());
+  const filtered = data.filter((item) => {
+    const searchMatch =
+      item.tin?.toLowerCase().includes(search.toLowerCase()) ||
+      item.registered_name?.toLowerCase().includes(search.toLowerCase());
 
-  const statusMatch =
-    statusFilter === '' || item.TaxpayerStatus === statusFilter;
+    const statusMatch =
+      statusFilter === '' || item.TaxpayerStatus === statusFilter;
 
-  const regDate = normalizeDate(item.date_of_registration);
-  const from = normalizeDate(fromDate);
-  const to = normalizeDate(toDate);
+    const regDate = normalizeDate(item.date_of_registration);
+    const from = normalizeDate(fromDate);
+    const to = normalizeDate(toDate);
 
-  const dateMatch = regDate >= from && regDate <= to;
+    const dateMatch = regDate >= from && regDate <= to;
 
-  return searchMatch && statusMatch && dateMatch;
-});
-
+    return searchMatch && statusMatch && dateMatch;
+  });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -110,6 +110,7 @@ const filtered = data.filter((item) => {
   return (
     <DashboardLayout>
       <Head title="Non-Individual Taxpayers" />
+      <Toaster position="top-right" />
       <div className="p-4">
         {/* Top Controls */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
