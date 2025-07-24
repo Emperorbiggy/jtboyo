@@ -15,7 +15,7 @@ export default function IndividualTaxPayer() {
 
   const [fromDate, setFromDate] = useState(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 30); // Last 30 days
+    date.setDate(date.getDate() - 30);
     date.setHours(0, 0, 0, 0);
     return date;
   });
@@ -46,13 +46,15 @@ export default function IndividualTaxPayer() {
         const data = await res.json();
         console.log('Fetched data:', data);
 
-        if (Array.isArray(data?.TaxpayerList)) {
-          setTaxpayers(data.TaxpayerList);
+        // ✅ Since backend now returns array directly
+        if (Array.isArray(data)) {
+          setTaxpayers(data);
         } else {
           setTaxpayers([]);
         }
       } catch (error) {
         console.error('Error fetching taxpayers:', error);
+        setTaxpayers([]);
       }
     };
 
