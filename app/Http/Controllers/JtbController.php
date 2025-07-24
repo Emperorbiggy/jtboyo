@@ -44,6 +44,39 @@ class JtbController extends Controller
      * Fetch individual taxpayers from JTB using session token.
      */
     public function fetchIndividualTaxpayers(Request $request)
+{
+    $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
+    $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    Log::info('JTB Token from session:', ['token' => $token, 'expires_at' => $expiresAt]);
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
+
+    // Decode the body JSON if necessary
+    $decoded = json_decode($data['body'], true);
+
+    // Optional: log to confirm it works
+    Log::info('Decoded JTB TaxpayerList:', $decoded);
+
+    return response()->json([
+        'success' => true,
+        'data' => $decoded['TaxpayerList'] ?? []
+    ]);
+}
+
+
+    /**
+     * Fetch non-individual taxpayers from JTB.
+     */
+    public function fetchNonIndividualTaxpayers(Request $request)
     {
         $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
         $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
@@ -51,38 +84,16 @@ class JtbController extends Controller
         $token = session('jtb_token');
         $expiresAt = session('jtb_token_expires_at');
 
-        Log::info('JTB Token from session:', ['token' => $token, 'expires_at' => $expiresAt]);
+        Log::info('JTB Token from session (Non-Individual):', ['token' => $token, 'expires_at' => $expiresAt]);
 
         if (!$token || now()->greaterThan($expiresAt)) {
             auth()->logout();
             return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
         }
 
-        $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
+        $data = $this->jtbService->getNonIndividualTaxpayers($token, $fromDate, $toDate);
         return response()->json($data);
     }
-
-    /**
-     * Fetch non-individual taxpayers from JTB.
-     */
-    // public function fetchNonIndividualTaxpayers(Request $request)
-    // {
-    //     $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
-    //     $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
-
-    //     $token = session('jtb_token');
-    //     $expiresAt = session('jtb_token_expires_at');
-
-    //     Log::info('JTB Token from session (Non-Individual):', ['token' => $token, 'expires_at' => $expiresAt]);
-
-    //     if (!$token || now()->greaterThan($expiresAt)) {
-    //         auth()->logout();
-    //         return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    //     }
-
-    //     $data = $this->jtbService->getNonIndividualTaxpayers($token, $fromDate, $toDate);
-    //     return response()->json($data);
-    // }
 
     /**
      * Submit a tax record to JTB.

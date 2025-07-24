@@ -29,37 +29,45 @@ export default function IndividualTaxPayer() {
   const itemsPerPage = 100;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`api/jtb/individuals`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            fromDate,
-            toDate,
-          }),
-        });
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/jtb/individuals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          fromDate,
+          toDate,
+        }),
+      });
 
-        const data = await res.json();
-        console.log('Fetched data:', data);
+      const response = await res.json();
+      console.log('Fetched data:', response);
 
-        // ✅ Since backend now returns array directly
-        if (Array.isArray(data)) {
-          setTaxpayers(data);
-        } else {
-          setTaxpayers([]);
-        }
-      } catch (error) {
-        console.error('Error fetching taxpayers:', error);
+      // ✅ Check nested structure correctly
+      if (
+        response.success &&
+        response.data &&
+        Array.isArray(response.data.data)
+      ) {
+        setTaxpayers(response.data.data);
+      } else {
+        console.warn('Unexpected data shape:', response);
         setTaxpayers([]);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching taxpayers:', error);
+      setTaxpayers([]);
+    }
+  };
 
+  if (fromDate && toDate) {
     fetchData();
-  }, [fromDate, toDate]);
+  }
+}, [fromDate, toDate]);
+
 
   const filteredTaxpayers = taxpayers.filter((t) => {
     const searchTerm = search.trim().toLowerCase();
