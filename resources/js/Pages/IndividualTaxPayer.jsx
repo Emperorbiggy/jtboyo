@@ -15,11 +15,17 @@ export default function IndividualTaxPayer() {
 
   const [fromDate, setFromDate] = useState(() => {
     const date = new Date();
-    date.setDate(date.getDate() - 6);
+    date.setDate(date.getDate() - 30); // Last 30 days
+    date.setHours(0, 0, 0, 0);
     return date;
   });
 
-  const [toDate, setToDate] = useState(new Date());
+  const [toDate, setToDate] = useState(() => {
+    const date = new Date();
+    date.setHours(23, 59, 59, 999);
+    return date;
+  });
+
   const itemsPerPage = 100;
 
   useEffect(() => {
@@ -40,7 +46,7 @@ export default function IndividualTaxPayer() {
         const data = await res.json();
         console.log('Fetched data:', data);
 
-        if (data?.TaxpayerList?.length) {
+        if (Array.isArray(data?.TaxpayerList)) {
           setTaxpayers(data.TaxpayerList);
         } else {
           setTaxpayers([]);
@@ -54,7 +60,7 @@ export default function IndividualTaxPayer() {
   }, [fromDate, toDate]);
 
   const filteredTaxpayers = taxpayers.filter((t) => {
-    const searchTerm = search.toLowerCase();
+    const searchTerm = search.trim().toLowerCase();
 
     const matchSearch =
       t.tin?.toLowerCase().includes(searchTerm) ||
@@ -64,8 +70,11 @@ export default function IndividualTaxPayer() {
     const matchStatus =
       statusFilter === '' || t.TaxpayerStatus?.toLowerCase() === statusFilter.toLowerCase();
 
-    const regDate = new Date(t.date_of_registration);
-    const matchDate = regDate >= fromDate && regDate <= toDate;
+    const regDate = t.date_of_registration ? new Date(t.date_of_registration) : null;
+
+    const matchDate =
+      !regDate ||
+      (regDate.setHours(0, 0, 0, 0), regDate >= fromDate && regDate <= toDate);
 
     return matchSearch && matchStatus && matchDate;
   });
@@ -121,14 +130,20 @@ export default function IndividualTaxPayer() {
 
             <DatePicker
               selected={fromDate}
-              onChange={setFromDate}
+              onChange={(date) => {
+                date.setHours(0, 0, 0, 0);
+                setFromDate(date);
+              }}
               dateFormat="yyyy-MM-dd"
               className="border px-3 py-2 rounded text-sm"
             />
 
             <DatePicker
               selected={toDate}
-              onChange={setToDate}
+              onChange={(date) => {
+                date.setHours(23, 59, 59, 999);
+                setToDate(date);
+              }}
               dateFormat="yyyy-MM-dd"
               className="border px-3 py-2 rounded text-sm"
             />
