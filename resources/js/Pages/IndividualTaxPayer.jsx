@@ -7,8 +7,6 @@ import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
-// const basePath = '/app/public';
-
 export default function IndividualTaxPayer() {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
@@ -22,52 +20,52 @@ export default function IndividualTaxPayer() {
   });
 
   const [toDate, setToDate] = useState(new Date());
-
   const itemsPerPage = 100;
 
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const res = await fetch(`api/jtb/individuals`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          fromDate,
-          toDate,
-        }),
-      });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`api/jtb/individuals`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({
+            fromDate,
+            toDate,
+          }),
+        });
 
-      // Log full response object
-      console.log('Response status:', res.status);
+        const data = await res.json();
+        console.log('Fetched data:', data);
 
-      const data = await res.json();
-      console.log('Response data:', data);
+        if (data?.TaxpayerList?.length) {
+          setTaxpayers(data.TaxpayerList);
+        } else {
+          setTaxpayers([]);
+        }
+      } catch (error) {
+        console.error('Error fetching taxpayers:', error);
+      }
+    };
 
-      if (data.TaxpayerList && Array.isArray(data.TaxpayerList)) {
-  setTaxpayers(data.TaxpayerList);
-}
-
-    } catch (error) {
-      console.error('Failed to fetch taxpayers:', error);
-    }
-  };
-
-  fetchData();
-}, [fromDate, toDate]);
-
+    fetchData();
+  }, [fromDate, toDate]);
 
   const filteredTaxpayers = taxpayers.filter((t) => {
-    const matchSearch = t.tin?.toLowerCase().includes(search.toLowerCase()) ||
-                        t.SBIRt_name?.toLowerCase().includes(search.toLowerCase()) ||
-                        t.last_name?.toLowerCase().includes(search.toLowerCase());
+    const searchTerm = search.toLowerCase();
 
-    const matchStatus = statusFilter === '' || t.TaxpayerStatus === statusFilter;
+    const matchSearch =
+      t.tin?.toLowerCase().includes(searchTerm) ||
+      t.first_name?.toLowerCase().includes(searchTerm) ||
+      t.last_name?.toLowerCase().includes(searchTerm);
 
-    const dob = new Date(t.date_of_birth);
-    const matchDate = dob >= fromDate && dob <= toDate;
+    const matchStatus =
+      statusFilter === '' || t.TaxpayerStatus?.toLowerCase() === statusFilter.toLowerCase();
+
+    const regDate = new Date(t.date_of_registration);
+    const matchDate = regDate >= fromDate && regDate <= toDate;
 
     return matchSearch && matchStatus && matchDate;
   });
@@ -90,7 +88,6 @@ export default function IndividualTaxPayer() {
   return (
     <DashboardLayout>
       <Head title="Individual Taxpayers" />
-
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
           <Link
@@ -125,17 +122,15 @@ export default function IndividualTaxPayer() {
             <DatePicker
               selected={fromDate}
               onChange={setFromDate}
-              dateFormat="dd-MM-yyyy"
+              dateFormat="yyyy-MM-dd"
               className="border px-3 py-2 rounded text-sm"
-              placeholderText="From Date"
             />
 
             <DatePicker
               selected={toDate}
               onChange={setToDate}
-              dateFormat="dd-MM-yyyy"
+              dateFormat="yyyy-MM-dd"
               className="border px-3 py-2 rounded text-sm"
-              placeholderText="To Date"
             />
 
             <button
@@ -150,70 +145,73 @@ export default function IndividualTaxPayer() {
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded shadow border text-sm">
             <thead className="bg-green-700 text-white">
-  <tr>
-    <th className="px-2 py-1">TIN</th>
-    <th className="px-2 py-1">Full Name</th>
-    <th className="px-2 py-1">Gender</th>
-    <th className="px-2 py-1">DOB</th>
-    <th className="px-2 py-1">Phone 1</th>
-    <th className="px-2 py-1">Phone 2</th>
-    <th className="px-2 py-1">Email</th>
-    <th className="px-2 py-1">Nationality</th>
-    <th className="px-2 py-1">Marital Status</th>
-    <th className="px-2 py-1">Occupation</th>
-    <th className="px-2 py-1">LGA</th>
-    <th className="px-2 py-1">State</th>
-    <th className="px-2 py-1">State of Origin</th>
-    <th className="px-2 py-1">City</th>
-    <th className="px-2 py-1">Street</th>
-    <th className="px-2 py-1">House No</th>
-    <th className="px-2 py-1">Tax Authority</th>
-    <th className="px-2 py-1">Status</th>
-    <th className="px-2 py-1">Registration Date</th>
-  </tr>
-</thead>
-<tbody>
-  {paginatedData.length === 0 ? (
-    <tr>
-      <td colSpan="19" className="text-center py-4 text-gray-500">
-        No taxpayers found.
-      </td>
-    </tr>
-  ) : (
-    paginatedData.map((t, i) => (
-      <tr key={i} className="hover:bg-gray-100 border-b text-xs">
-        <td className="px-2 py-1">{t.tin}</td>
-        <td className="px-2 py-1">
-          {`${t.Title || ''} ${t.first_name || ''} ${t.middle_name || ''} ${t.last_name || ''}`}
-        </td>
-        <td className="px-2 py-1">{t.GenderName}</td>
-        <td className="px-2 py-1">{t.date_of_birth?.slice(0, 10)}</td>
-        <td className="px-2 py-1">{t.phone_no_1}</td>
-        <td className="px-2 py-1">{t.phone_no_2 || '—'}</td>
-        <td className="px-2 py-1">{t.email_address}</td>
-        <td className="px-2 py-1">{t.nationality_name}</td>
-        <td className="px-2 py-1">{t.MaritalStatus}</td>
-        <td className="px-2 py-1">{t.Occupation}</td>
-        <td className="px-2 py-1">{t.LGAName}</td>
-        <td className="px-2 py-1">{t.StateName}</td>
-        <td className="px-2 py-1">{t.StateOfOrigin}</td>
-        <td className="px-2 py-1">{t.city}</td>
-        <td className="px-2 py-1">{t.street_name}</td>
-        <td className="px-2 py-1">{t.house_number}</td>
-        <td className="px-2 py-1">{t.TaxAuthorityName}</td>
-        <td className="px-2 py-1">
-          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-            t.TaxpayerStatus === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
-            {t.TaxpayerStatus}
-          </span>
-        </td>
-        <td className="px-2 py-1">{t.date_of_registration?.slice(0, 10)}</td>
-      </tr>
-    ))
-  )}
-</tbody>
-
+              <tr>
+                <th className="px-2 py-1">TIN</th>
+                <th className="px-2 py-1">Full Name</th>
+                <th className="px-2 py-1">Gender</th>
+                <th className="px-2 py-1">DOB</th>
+                <th className="px-2 py-1">Phone 1</th>
+                <th className="px-2 py-1">Phone 2</th>
+                <th className="px-2 py-1">Email</th>
+                <th className="px-2 py-1">Nationality</th>
+                <th className="px-2 py-1">Marital Status</th>
+                <th className="px-2 py-1">Occupation</th>
+                <th className="px-2 py-1">LGA</th>
+                <th className="px-2 py-1">State</th>
+                <th className="px-2 py-1">State of Origin</th>
+                <th className="px-2 py-1">City</th>
+                <th className="px-2 py-1">Street</th>
+                <th className="px-2 py-1">House No</th>
+                <th className="px-2 py-1">Tax Authority</th>
+                <th className="px-2 py-1">Status</th>
+                <th className="px-2 py-1">Registration Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedData.length === 0 ? (
+                <tr>
+                  <td colSpan="19" className="text-center py-4 text-gray-500">
+                    No taxpayers found.
+                  </td>
+                </tr>
+              ) : (
+                paginatedData.map((t, i) => (
+                  <tr key={i} className="hover:bg-gray-100 border-b text-xs">
+                    <td className="px-2 py-1">{t.tin}</td>
+                    <td className="px-2 py-1">
+                      {[t.Title, t.first_name, t.middle_name, t.last_name].filter(Boolean).join(' ')}
+                    </td>
+                    <td className="px-2 py-1">{t.GenderName}</td>
+                    <td className="px-2 py-1">{t.date_of_birth?.slice(0, 10)}</td>
+                    <td className="px-2 py-1">{t.phone_no_1}</td>
+                    <td className="px-2 py-1">{t.phone_no_2 || '—'}</td>
+                    <td className="px-2 py-1">{t.email_address}</td>
+                    <td className="px-2 py-1">{t.nationality_name}</td>
+                    <td className="px-2 py-1">{t.MaritalStatus}</td>
+                    <td className="px-2 py-1">{t.Occupation}</td>
+                    <td className="px-2 py-1">{t.LGAName}</td>
+                    <td className="px-2 py-1">{t.StateName}</td>
+                    <td className="px-2 py-1">{t.StateOfOrigin}</td>
+                    <td className="px-2 py-1">{t.city}</td>
+                    <td className="px-2 py-1">{t.street_name}</td>
+                    <td className="px-2 py-1">{t.house_number}</td>
+                    <td className="px-2 py-1">{t.TaxAuthorityName}</td>
+                    <td className="px-2 py-1">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-bold ${
+                          t.TaxpayerStatus === 'Active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {t.TaxpayerStatus}
+                      </span>
+                    </td>
+                    <td className="px-2 py-1">{t.date_of_registration?.slice(0, 10)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
           </table>
         </div>
 
