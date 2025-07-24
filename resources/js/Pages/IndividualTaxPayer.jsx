@@ -23,7 +23,7 @@ export default function IndividualTaxPayer() {
 
   const [toDate, setToDate] = useState(new Date());
 
-  const itemsPerPage = 10;
+  const itemsPerPage = 100;
 
  useEffect(() => {
   const fetchData = async () => {
@@ -46,9 +46,10 @@ export default function IndividualTaxPayer() {
       const data = await res.json();
       console.log('Response data:', data);
 
-      if (data.success && data.taxpayers) {
-        setTaxpayers(data.taxpayers);
-      }
+      if (data.TaxpayerList && Array.isArray(data.TaxpayerList)) {
+  setTaxpayers(data.TaxpayerList);
+}
+
     } catch (error) {
       console.error('Failed to fetch taxpayers:', error);
     }
@@ -149,53 +150,70 @@ export default function IndividualTaxPayer() {
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white rounded shadow border text-sm">
             <thead className="bg-green-700 text-white">
-              <tr>
-                <th className="px-4 py-2 text-left">TIN</th>
-                <th className="px-4 py-2 text-left">Full Name</th>
-                <th className="px-4 py-2 text-left">Gender</th>
-                <th className="px-4 py-2 text-left">DOB</th>
-                <th className="px-4 py-2 text-left">Phone</th>
-                <th className="px-4 py-2 text-left">Nationality</th>
-                <th className="px-4 py-2 text-left">State</th>
-                <th className="px-4 py-2 text-left">LGA</th>
-                <th className="px-4 py-2 text-left">Tax Authority</th>
-                <th className="px-4 py-2 text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedData.length === 0 ? (
-                <tr>
-                  <td colSpan="10" className="text-center py-4 text-gray-500">
-                    No taxpayers found.
-                  </td>
-                </tr>
-              ) : (
-                paginatedData.map((t, i) => (
-                  <tr key={i} className="hover:bg-gray-100 border-b">
-                    <td className="px-4 py-2">{t.tin}</td>
-                    <td className="px-4 py-2">
-                      {`${t.Title || ''} ${t.SBIRt_name || ''} ${t.middle_name || ''} ${t.last_name || ''}`}
-                    </td>
-                    <td className="px-4 py-2">{t.GenderName}</td>
-                    <td className="px-4 py-2">{t.date_of_birth}</td>
-                    <td className="px-4 py-2">{t.phone_no_1}</td>
-                    <td className="px-4 py-2">{t.nationality_name}</td>
-                    <td className="px-4 py-2">{t.StateName}</td>
-                    <td className="px-4 py-2">{t.LGAName}</td>
-                    <td className="px-4 py-2">{t.TaxAuthorityName}</td>
-                    <td className="px-4 py-2">
-                      <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                        t.TaxpayerStatus === 'Active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {t.TaxpayerStatus}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
+  <tr>
+    <th className="px-2 py-1">TIN</th>
+    <th className="px-2 py-1">Full Name</th>
+    <th className="px-2 py-1">Gender</th>
+    <th className="px-2 py-1">DOB</th>
+    <th className="px-2 py-1">Phone 1</th>
+    <th className="px-2 py-1">Phone 2</th>
+    <th className="px-2 py-1">Email</th>
+    <th className="px-2 py-1">Nationality</th>
+    <th className="px-2 py-1">Marital Status</th>
+    <th className="px-2 py-1">Occupation</th>
+    <th className="px-2 py-1">LGA</th>
+    <th className="px-2 py-1">State</th>
+    <th className="px-2 py-1">State of Origin</th>
+    <th className="px-2 py-1">City</th>
+    <th className="px-2 py-1">Street</th>
+    <th className="px-2 py-1">House No</th>
+    <th className="px-2 py-1">Tax Authority</th>
+    <th className="px-2 py-1">Status</th>
+    <th className="px-2 py-1">Registration Date</th>
+  </tr>
+</thead>
+<tbody>
+  {paginatedData.length === 0 ? (
+    <tr>
+      <td colSpan="19" className="text-center py-4 text-gray-500">
+        No taxpayers found.
+      </td>
+    </tr>
+  ) : (
+    paginatedData.map((t, i) => (
+      <tr key={i} className="hover:bg-gray-100 border-b text-xs">
+        <td className="px-2 py-1">{t.tin}</td>
+        <td className="px-2 py-1">
+          {`${t.Title || ''} ${t.first_name || ''} ${t.middle_name || ''} ${t.last_name || ''}`}
+        </td>
+        <td className="px-2 py-1">{t.GenderName}</td>
+        <td className="px-2 py-1">{t.date_of_birth?.slice(0, 10)}</td>
+        <td className="px-2 py-1">{t.phone_no_1}</td>
+        <td className="px-2 py-1">{t.phone_no_2 || '—'}</td>
+        <td className="px-2 py-1">{t.email_address}</td>
+        <td className="px-2 py-1">{t.nationality_name}</td>
+        <td className="px-2 py-1">{t.MaritalStatus}</td>
+        <td className="px-2 py-1">{t.Occupation}</td>
+        <td className="px-2 py-1">{t.LGAName}</td>
+        <td className="px-2 py-1">{t.StateName}</td>
+        <td className="px-2 py-1">{t.StateOfOrigin}</td>
+        <td className="px-2 py-1">{t.city}</td>
+        <td className="px-2 py-1">{t.street_name}</td>
+        <td className="px-2 py-1">{t.house_number}</td>
+        <td className="px-2 py-1">{t.TaxAuthorityName}</td>
+        <td className="px-2 py-1">
+          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+            t.TaxpayerStatus === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {t.TaxpayerStatus}
+          </span>
+        </td>
+        <td className="px-2 py-1">{t.date_of_registration?.slice(0, 10)}</td>
+      </tr>
+    ))
+  )}
+</tbody>
+
           </table>
         </div>
 
