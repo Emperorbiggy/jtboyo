@@ -53,13 +53,14 @@ export default function NonIndividualTaxPayers() {
       if (!res.ok) throw new Error('Failed to fetch');
 
       const result = await res.json();
-      setData(result?.TaxpayerList || []);
-      console.log('First taxpayer record:', result?.TaxpayerList?.[0]);
+      const taxpayerList = result?.TaxpayerList || [];
 
-      toast.success(`${result?.TaxpayerList?.length || 0} record(s) loaded`);
+      setData(taxpayerList);
+      console.log('First taxpayer record:', taxpayerList[0]);
+      toast.success(`Fetched ${taxpayerList.length} taxpayer records.`);
     } catch (error) {
       console.error('Error fetching non-individual taxpayers:', error);
-      toast.error('Failed to fetch non-individual taxpayer data.');
+      toast.error('Error fetching data.');
     } finally {
       setLoading(false);
     }
@@ -67,6 +68,7 @@ export default function NonIndividualTaxPayers() {
 
   if (fromDate && toDate) fetchData();
 }, [fromDate, toDate]);
+
 
 
   const normalizeDate = (date) => {
