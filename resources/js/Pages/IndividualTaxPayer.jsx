@@ -17,32 +17,37 @@ export default function IndividualTaxPayer() {
   const itemsPerPage = 100;
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await fetch(`api/jtb/individuals`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({}),
-        });
+  const fetchData = async () => {
+    try {
+      const res = await fetch(`api/jtb/individuals`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
 
-        const data = await res.json();
-        console.log('Fetched data:', data);
+      const response = await res.json();
+      console.log('Full API response:', response); // Debug log
 
-        if (data?.TaxpayerList?.length) {
-          setTaxpayers(data.TaxpayerList);
-        } else {
-          setTaxpayers([]);
-        }
-      } catch (error) {
-        console.error('Error fetching taxpayers:', error);
+      // Check both possible paths for the data
+      const data = response.TaxpayerList || (response.data && response.data.TaxpayerList);
+      
+      if (data?.length) {
+        console.log('Setting taxpayers:', data); // Debug log
+        setTaxpayers(data);
+      } else {
+        console.warn('No taxpayer data found in response');
+        setTaxpayers([]);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching taxpayers:', error);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
 
   const filteredTaxpayers = taxpayers.filter((t) => {
     const searchTerm = search.toLowerCase();
