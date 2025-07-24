@@ -6,6 +6,8 @@ import 'react-datepicker/dist/react-datepicker.css';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { FaSearch } from 'react-icons/fa';
+import toast, { Toaster } from 'react-hot-toast';
+
 
 // const basePath = '/app/public';
 
@@ -25,43 +27,47 @@ export default function NonIndividualTaxPayers() {
   const itemsPerPage = 10;
 
   useEffect(() => {
-    const fetchData = async () => {
-      // Validate date range (max 7 days)
-      const diffInMs = toDate - fromDate;
-      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+  const fetchData = async () => {
+    const diffInMs = toDate - fromDate;
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
 
-      if (diffInDays > 7) {
-        alert('The date range cannot exceed 7 days.');
-        return;
-      }
+    if (diffInDays > 7) {
+      toast.error('The date range cannot exceed 7 days.');
+      return;
+    }
 
-      setLoading(true);
-      try {
-        const res = await fetch('/api/jtb/non-individuals', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            fromDate: fromDate.toISOString().split('T')[0],
-            toDate: toDate.toISOString().split('T')[0],
-          }),
-        });
+    setLoading(true);
+    try {
+      const res = await fetch('/api/jtb/non-individuals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          fromDate: fromDate.toISOString().split('T')[0],
+          toDate: toDate.toISOString().split('T')[0],
+        }),
+      });
 
-        if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error('Failed to fetch');
 
-        const result = await res.json();
-        setData(result?.TaxpayerList || []);
-      } catch (error) {
-        console.error('Error fetching non-individual taxpayers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const result = await res.json();
+      setData(result?.TaxpayerList || []);
+      console.log('First taxpayer record:', result?.TaxpayerList?.[0]);
 
-    if (fromDate && toDate) fetchData();
-  }, [fromDate, toDate]);
+      toast.success(`${result?.TaxpayerList?.length || 0} record(s) loaded`);
+    } catch (error) {
+      console.error('Error fetching non-individual taxpayers:', error);
+      toast.error('Failed to fetch non-individual taxpayer data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (fromDate && toDate) fetchData();
+}, [fromDate, toDate]);
+
 
   const filtered = data.filter((item) => {
     const searchMatch =
