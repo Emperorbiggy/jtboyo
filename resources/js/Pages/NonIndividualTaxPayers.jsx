@@ -69,19 +69,29 @@ export default function NonIndividualTaxPayers() {
 }, [fromDate, toDate]);
 
 
-  const filtered = data.filter((item) => {
-    const searchMatch =
-      item.tin?.toLowerCase().includes(search.toLowerCase()) ||
-      item.registered_name?.toLowerCase().includes(search.toLowerCase());
+  const normalizeDate = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
 
-    const statusMatch =
-      statusFilter === '' || item.TaxpayerStatus === statusFilter;
+const filtered = data.filter((item) => {
+  const searchMatch =
+    item.tin?.toLowerCase().includes(search.toLowerCase()) ||
+    item.registered_name?.toLowerCase().includes(search.toLowerCase());
 
-    const regDate = new Date(item.date_of_registration);
-    const dateMatch = regDate >= fromDate && regDate <= toDate;
+  const statusMatch =
+    statusFilter === '' || item.TaxpayerStatus === statusFilter;
 
-    return searchMatch && statusMatch && dateMatch;
-  });
+  const regDate = normalizeDate(item.date_of_registration);
+  const from = normalizeDate(fromDate);
+  const to = normalizeDate(toDate);
+
+  const dateMatch = regDate >= from && regDate <= to;
+
+  return searchMatch && statusMatch && dateMatch;
+});
+
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
