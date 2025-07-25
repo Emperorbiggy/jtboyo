@@ -10,7 +10,7 @@ export default function AuthAppIndex() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    router.post('/api/auth-apps/create', form, {
+    router.post('/api/v1/generate-token', form, {
       onSuccess: () => {
         setForm({ app_name: '', whitelisted_ips: '', description: '' });
         setShowModal(false);
