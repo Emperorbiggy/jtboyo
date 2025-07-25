@@ -11,55 +11,105 @@ use Illuminate\Support\Facades\Validator;
 class ApiController extends Controller
 {
     public function generateToken(Request $request, TokenService $tokenService)
-{
-    $validator = Validator::make($request->all(), [
-        'app_name' => 'required|string|max:255',
-        'whitelisted_ips' => 'required|string', // or use array if sent that way
-        'description' => 'nullable|string',
-    ]);
+    {
+        $validator = Validator::make($request->all(), [
+            'app_name' => 'required|string|max:255',
+            'whitelisted_ips' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
 
-    if ($validator->fails()) {
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'messages' => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+        $token = $tokenService->generateToken($data['app_name']);
+
+        $authApp = AuthApp::create([
+            'app_name' => $data['app_name'],
+            'token' => $token,
+            'whitelisted_ips' => [$data['whitelisted_ips']],
+            'request_count' => 0,
+            'status' => true,
+            'description' => $data['description'] ?? null,
+            'last_accessed_at' => null,
+        ]);
+
         return response()->json([
-            'error' => 'Validation failed',
-            'messages' => $validator->errors(),
-        ], 422);
+            'success' => true,
+            'message' => 'Token generated successfully.',
+            'data' => $authApp,
+        ], 201);
     }
 
-    $data = $validator->validated();
+    public function getAllAuthApps()
+    {
+        $apps = AuthApp::orderByDesc('created_at')->get();
 
-    // ✅ Use the injected service to generate token
-    $token = $tokenService->generateToken($data['app_name']); // optionally pass app_name as context
+        return response()->json([
+            'success' => true,
+            'data' => $apps
+        ]);
+    }
 
-    $authApp = AuthApp::create([
-        'app_name' => $data['app_name'],
-        'token' => $token,
-        'whitelisted_ips' => [$data['whitelisted_ips']], // store as array (auto-cast to JSON)
-        'request_count' => 0,
-        'status' => true,
-        'description' => $data['description'] ?? null,
-        'last_accessed_at' => null,
-    ]);
+    public function updateApp(Request $request, $id)
+    {
+        $authApp = AuthApp::find($id);
+        if (!$authApp) {
+            return response()->json(['success' => false, 'message' => 'App not found.'], 404);
+        }
 
-    return response()->json([
-        'success' => true,
-        'message' => 'Token generated successfully.',
-        'data' => [
-            'app_name' => $authApp->app_name,
-            'token' => $authApp->token,
-            'whitelisted_ips' => $authApp->whitelisted_ips,
-            'status' => $authApp->status,
-            'description' => $authApp->description,
-        ],
-    ], 201);
-}
-public function getAllAuthApps()
-{
-    $apps = AuthApp::orderByDesc('created_at')->get();
+        $validator = Validator::make($request->all(), [
+            'app_name' => 'required|string|max:255',
+            'whitelisted_ips' => 'required|string',
+            'description' => 'nullable|string',
+        ]);
 
-    return response()->json([
-        'success' => true,
-        'data' => $apps
-    ]);
-}
+        if ($validator->fails()) {
+            return response()->json(['error' => 'Validation failed', 'messages' => $validator->errors()], 422);
+        }
 
+        $authApp->update([
+            'app_name' => $request->app_name,
+            'whitelisted_ips' => [$request->whitelisted_ips],
+            'description' => $request->description,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'App updated successfully.', 'data' => $authApp]);
+    }
+
+    public function deleteApp($id)
+    {
+        $authApp = AuthApp::find($id);
+        if (!$authApp) {
+            return response()->json(['success' => false, 'message' => 'App not found.'], 404);
+        }
+
+        $authApp->delete();
+
+        return response()->json(['success' => true, 'message' => 'App deleted successfully.']);
+    }
+
+    public function toggleStatus($id)
+    {
+        $authApp = AuthApp::find($id);
+        if (!$authApp) {
+            return response()->json(['success' => false, 'message' => 'App not found.'], 404);
+        }
+
+        $authApp->status = !$authApp->status;
+        $authApp->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'App status updated.',
+            'data' => [
+                'id' => $authApp->id,
+                'status' => $authApp->status
+            ]
+        ]);
+    }
 }
