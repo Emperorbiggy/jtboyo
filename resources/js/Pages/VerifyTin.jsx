@@ -116,15 +116,33 @@ export default function VerifyTin() {
     <h3 className="text-lg font-semibold text-green-800 mb-4">Verification Result</h3>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
       <div><span className="font-medium">TIN:</span> {result.Taxpayer.tin}</div>
-      <div><span className="font-medium">First Name:</span> {result.Taxpayer.first_name}</div>
-      <div><span className="font-medium">Middle Name:</span> {result.Taxpayer.middle_name || 'N/A'}</div>
-      <div><span className="font-medium">Last Name:</span> {result.Taxpayer.last_name}</div>
-      <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
-      <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
-      <div><span className="font-medium">Date of Birth:</span> {result.Taxpayer.date_of_birth}</div>
-      <div><span className="font-medium">Registration Date:</span> {result.Taxpayer.date_of_registration}</div>
-      <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
-      <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+
+      {/* Check for Individual */}
+      {result.Taxpayer.first_name ? (
+        <>
+          <div><span className="font-medium">First Name:</span> {result.Taxpayer.first_name}</div>
+          <div><span className="font-medium">Middle Name:</span> {result.Taxpayer.middle_name || 'N/A'}</div>
+          <div><span className="font-medium">Last Name:</span> {result.Taxpayer.last_name}</div>
+          <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
+          <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
+          <div><span className="font-medium">Date of Birth:</span> {result.Taxpayer.date_of_birth}</div>
+          <div><span className="font-medium">Registration Date:</span> {result.Taxpayer.date_of_registration}</div>
+          <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
+          <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+        </>
+      ) : (
+        // Non-Individual
+        <>
+          <div><span className="font-medium">Registered Name:</span> {result.Taxpayer.registered_name}</div>
+          <div><span className="font-medium">Registration Number:</span> {result.Taxpayer.registration_number}</div>
+          <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
+          <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
+          <div><span className="font-medium">Date of Incorporation:</span> {result.Taxpayer.date_of_incorporation}</div>
+          <div><span className="font-medium">Date of Registration:</span> {result.Taxpayer.date_of_registration}</div>
+          <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
+          <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+        </>
+      )}
     </div>
   </div>
 )}
