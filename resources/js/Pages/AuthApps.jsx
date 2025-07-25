@@ -23,7 +23,7 @@ export default function CreateApp() {
 
   const fetchApps = async () => {
     try {
-      const response = await axios.get('/api/auth-apps');
+      const response = await axios.get('/api/v1/auth-apps');
       setApps(response.data.data);
     } catch (err) {
       toast.error('Failed to fetch apps');
@@ -40,10 +40,10 @@ export default function CreateApp() {
   const handleSubmit = async () => {
     try {
       if (editMode && editAppId) {
-        await axios.put(`/api/auth-apps/${editAppId}`, formData);
+        await axios.put(`/api/v1/auth-apps/${editAppId}`, formData);
         toast.success('App updated');
       } else {
-        await axios.post('/api/auth-apps/generate-token', formData);
+        await axios.post('/api/v1/generate-token', formData);
         toast.success('App created');
       }
 
@@ -70,7 +70,7 @@ export default function CreateApp() {
 
   const toggleStatus = async (app) => {
     try {
-      await axios.put(`/api/auth-apps/${app.id}/toggle-status`);
+      await axios.put(`/api/v1/auth-apps/${app.id}/toggle-status`);
       toast.success('Status updated');
       fetchApps();
     } catch (err) {
