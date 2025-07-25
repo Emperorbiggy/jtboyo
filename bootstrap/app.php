@@ -17,9 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->api(prepend: [
-            \App\Http\Middleware\VerifyApiAccess::class,
-        ]);
+        
+        // $middleware->api(prepend: [
+        //     \App\Http\Middleware\VerifyApiAccess::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
