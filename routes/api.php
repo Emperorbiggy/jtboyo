@@ -24,8 +24,8 @@ Route::middleware([
     Route::post('/jtb/verify-non-individual-tin', [JtbController::class, 'verifyNonIndividualTin']);
     Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
     Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
-    Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateAuthApp']);      
-    Route::delete('/v1/auth-apps/{id}', [ApiController::class, 'deleteAuthApp']);  
+    Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateApp']);         // ✅ Fixed
+Route::delete('/v1/auth-apps/{id}', [ApiController::class, 'deleteApp']);      // ✅ Fixed 
     Route::patch('/v1/auth-apps/{id}/status', [ApiController::class, 'toggleStatus']); 
 });
 
