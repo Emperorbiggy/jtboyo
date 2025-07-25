@@ -13,10 +13,11 @@ class ApiController extends Controller
     public function generateToken(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'app_name' => 'required|string|max:255',
-            'ip' => 'required|ip',
-            'description' => 'nullable|string',
-        ]);
+    'app_name' => 'required|string|max:255',
+    'whitelisted_ips' => 'required|string', // or use array if you're sending it as an array
+    'description' => 'nullable|string',
+]);
+
 
         if ($validator->fails()) {
             return response()->json([
