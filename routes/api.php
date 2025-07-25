@@ -12,8 +12,13 @@ Route::middleware([
     AddQueuedCookiesToResponse::class,
     StartSession::class,
 ])->group(function () {
+    // Existing JTB routes
     Route::post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
     Route::post('/jtb/non-individuals', [JtbController::class, 'fetchNonIndividualTaxpayers']);
     Route::post('/jtb/add-tax-record', [JtbController::class, 'submitTaxRecord']);
     Route::post('/jtb/submit-asset', [JtbController::class, 'submitAsset']);
+
+    // ✅ New Verification Routes
+    Route::post('/jtb/verify-individual-tin', [JtbController::class, 'verifyIndividualTin']);
+    Route::post('/jtb/verify-non-individual-tin', [JtbController::class, 'verifyNonIndividualTin']);
 });

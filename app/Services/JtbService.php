@@ -203,5 +203,61 @@ class JtbService
             return ['success' => false, 'message' => 'AddAssetDetails failed.'];
         }
     }
+        public function verifyIndividualTin(string $token, string $tin)
+    {
+        $url = $this->baseUrlNew . '/individualtinvalidation?tokenid=' . $token;
+
+        Log::info('Verifying Individual TIN', [
+            'url' => $url,
+            'tin' => $tin,
+        ]);
+
+        try {
+            $response = Http::asForm()->withHeaders([
+                'Accept' => 'application/json',
+            ])->post($url, [
+                'tin' => $tin,
+            ]);
+
+            Log::info('JTB Individual TIN Verification Response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error verifying individual TIN', ['message' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Individual TIN verification failed.'];
+        }
+    }
+
+    public function verifyNonIndividualTin(string $token, string $tin)
+    {
+        $url = $this->baseUrlNew . '/nonindividualtinvalidation?tokenid=' . $token;
+
+        Log::info('Verifying Non-Individual TIN', [
+            'url' => $url,
+            'tin' => $tin,
+        ]);
+
+        try {
+            $response = Http::asForm()->withHeaders([
+                'Accept' => 'application/json',
+            ])->post($url, [
+                'tin' => $tin,
+            ]);
+
+            Log::info('JTB Non-Individual TIN Verification Response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error verifying non-individual TIN', ['message' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Non-Individual TIN verification failed.'];
+        }
+    }
+
 
 }

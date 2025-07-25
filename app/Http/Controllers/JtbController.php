@@ -203,4 +203,63 @@ public function submitAsset(Request $request)
     return response()->json($response);
 }
 
+public function verifyIndividualTin(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'tin' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $tin = $request->input('tin');
+    $response = $this->jtbService->verifyIndividualTin($tin, $token);
+
+    return response()->json($response);
+}
+
+/**
+ * Verify Non-Individual TIN using JTB new endpoint.
+ */
+public function verifyNonIndividualTin(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'tin' => 'required|string',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $tin = $request->input('tin');
+    $response = $this->jtbService->verifyNonIndividualTin($tin, $token);
+
+    return response()->json($response);
+}
+
 }
