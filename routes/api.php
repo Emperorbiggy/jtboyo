@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\JtbController;
+use App\Http\Controllers\Api\ApiController;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Session\Middleware\StartSession;
@@ -21,4 +22,7 @@ Route::middleware([
     // ✅ New Verification Routes
     Route::post('/jtb/verify-individual-tin', [JtbController::class, 'verifyIndividualTin']);
     Route::post('/jtb/verify-non-individual-tin', [JtbController::class, 'verifyNonIndividualTin']);
+    Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
 });
+
+require __DIR__.'/api/v1.php';

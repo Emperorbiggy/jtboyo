@@ -35,6 +35,10 @@ Route::get('/non-individual', function () {
     return Inertia::render('NonIndividualTaxPayers');
 });
 
+Route::get('/create-app', function () {
+    return Inertia::render('AuthApps');
+});
+
 Route::get('/add-tax-record', function () {
     return Inertia::render('AddRecord');
 });
