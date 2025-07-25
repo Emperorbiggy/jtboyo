@@ -16,6 +16,7 @@ class JtbService
     public function __construct()
     {
         $this->baseUrl = config('services.jtb.base_url');
+        $this->baseUrlNew = config('services.jtb.new_base_url');
         $this->email = config('services.jtb.email');
         $this->password = config('services.jtb.password');
         $this->clientName = config('services.jtb.client_name');

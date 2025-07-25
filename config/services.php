@@ -30,6 +30,7 @@ return [
 
     'jtb' => [
     'base_url' => env('JTB_BASE_URL'),
+    'new_base_url' => env('JTB_BASE_URL_NEW'),
     'email' => env('JTB_EMAIL'),
     'password' => env('JTB_PASSWORD'),
     'client_name' => env('JTB_CLIENT_NAME'),
