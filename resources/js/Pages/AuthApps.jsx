@@ -1,35 +1,37 @@
 import React, { useState } from 'react';
-import { Head, usePage, router } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { FaPlusCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function AuthAppIndex() {
   const { authApps = [] } = usePage().props;
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ app_name: '', whitelisted_ips: '', description: '' });
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
-    router.post('/api/v1/generate-token', form, {
-      preserveScroll: true,
+    try {
+      const response = await axios.post('/api/v1/generate-token', form);
 
-      onSuccess: (page) => {
-        toast.success('Token generated successfully!');
-        setForm({ app_name: '', whitelisted_ips: '', description: '' });
-        setShowModal(false);
-      },
-
-      onError: (errors) => {
-        const messages = Object.values(errors).flat();
-        messages.forEach((msg) => toast.error(msg));
-      },
-
-      onFinish: () => {
-        // optional: focus something or reset loading state
+      toast.success(response.data.message || 'Token generated successfully!');
+      setForm({ app_name: '', whitelisted_ips: '', description: '' });
+      setShowModal(false);
+      // optionally: refresh data
+    } catch (error) {
+      if (error.response?.status === 422) {
+        const errors = error.response.data.messages;
+        Object.values(errors).flat().forEach((msg) => toast.error(msg));
+      } else {
+        toast.error('Something went wrong.');
       }
-    });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -112,14 +114,16 @@ export default function AuthAppIndex() {
                     type="button"
                     className="text-gray-600 hover:text-black"
                     onClick={() => setShowModal(false)}
+                    disabled={loading}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+                    disabled={loading}
                   >
-                    Submit
+                    {loading ? 'Submitting...' : 'Submit'}
                   </button>
                 </div>
               </form>
