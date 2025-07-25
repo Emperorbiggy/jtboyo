@@ -23,6 +23,7 @@ Route::middleware([
     Route::post('/jtb/verify-individual-tin', [JtbController::class, 'verifyIndividualTin']);
     Route::post('/jtb/verify-non-individual-tin', [JtbController::class, 'verifyNonIndividualTin']);
     Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
+    Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
 });
 
 require __DIR__.'/api/v1.php';

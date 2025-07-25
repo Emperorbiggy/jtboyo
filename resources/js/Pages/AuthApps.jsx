@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
-import { Head, usePage } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { FaPlusCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 
 export default function AuthAppIndex() {
-  const { authApps = [] } = usePage().props;
+  const [apps, setApps] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ app_name: '', whitelisted_ips: '', description: '' });
   const [loading, setLoading] = useState(false);
+
+  const fetchApps = async () => {
+    try {
+      const response = await axios.get('/api/v1/auth-apps');
+      setApps(response.data.data);
+    } catch (err) {
+      toast.error('Failed to load apps');
+    }
+  };
+
+  useEffect(() => {
+    fetchApps();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +34,7 @@ export default function AuthAppIndex() {
       toast.success(response.data.message || 'Token generated successfully!');
       setForm({ app_name: '', whitelisted_ips: '', description: '' });
       setShowModal(false);
-      // optionally: refresh data
+      fetchApps(); // refresh list
     } catch (error) {
       if (error.response?.status === 422) {
         const errors = error.response.data.messages;
@@ -60,11 +73,11 @@ export default function AuthAppIndex() {
               </tr>
             </thead>
             <tbody>
-              {authApps.map((app) => (
+              {apps.map((app) => (
                 <tr key={app.id} className="border-b hover:bg-gray-50">
                   <td className="py-2 px-4">{app.app_name}</td>
                   <td className="py-2 px-4 text-xs break-all">{app.token}</td>
-                  <td className="py-2 px-4">{app.whitelisted_ips}</td>
+                  <td className="py-2 px-4">{app.whitelisted_ips?.join(', ')}</td>
                   <td className="py-2 px-4">{app.status ? 'Active' : 'Inactive'}</td>
                   <td className="py-2 px-4">{app.last_accessed_at || 'Never'}</td>
                 </tr>

@@ -52,4 +52,14 @@ class ApiController extends Controller
         ],
     ], 201);
 }
+public function getAllAuthApps()
+{
+    $apps = AuthApp::orderByDesc('created_at')->get();
+
+    return response()->json([
+        'success' => true,
+        'data' => $apps
+    ]);
+}
+
 }
