@@ -1,9 +1,8 @@
 import React from 'react';
 import { Head, router, usePage } from '@inertiajs/react';
-import { FaUsers, FaBuilding, FaPlusCircle, FaFileInvoice } from 'react-icons/fa';
+import { FaUsers, FaBuilding, FaPlusCircle, FaFileInvoice, FaIdCard, FaIdBadge } from 'react-icons/fa';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 
-// const basePath = '/app/public'; 
 export default function Dashboard() {
   const { props } = usePage();
   const demoUser = props.auth?.user || { name: 'John Doe' };
@@ -17,25 +16,38 @@ export default function Dashboard() {
         </h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* New TIN Verification Buttons */}
+          <Card
+            title="Individual TIN Verification"
+            icon={<FaIdCard className="text-4xl text-green-600" />}
+            route="/tin-verification/individual"
+          />
+          <Card
+            title="Non-Individual TIN Verification"
+            icon={<FaIdBadge className="text-4xl text-green-600" />}
+            route="/tin-verification/non-individual"
+          />
+
+          {/* Existing Cards */}
           <Card
             title="Individual Taxpayers"
             icon={<FaUsers className="text-4xl text-green-600" />}
-            route={`/individual`}
+            route="/individual"
           />
           <Card
             title="Non-Individual Taxpayers"
             icon={<FaBuilding className="text-4xl text-green-600" />}
-            route={`/non-individual`}
+            route="/non-individual"
           />
           <Card
             title="Add Tax Record"
             icon={<FaFileInvoice className="text-4xl text-green-600" />}
-            route={`/add-tax-record`}
+            route="/add-tax-record"
           />
           <Card
             title="Add Asset Details"
             icon={<FaPlusCircle className="text-4xl text-green-600" />}
-            route={`/add-asset`}
+            route="/add-asset"
           />
         </div>
       </DashboardLayout>
