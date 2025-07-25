@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Head, usePage, router } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { FaPlusCircle } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 export default function AuthAppIndex() {
   const { authApps = [] } = usePage().props;
@@ -10,10 +11,23 @@ export default function AuthAppIndex() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
     router.post('/api/v1/generate-token', form, {
-      onSuccess: () => {
+      preserveScroll: true,
+
+      onSuccess: (page) => {
+        toast.success('Token generated successfully!');
         setForm({ app_name: '', whitelisted_ips: '', description: '' });
         setShowModal(false);
+      },
+
+      onError: (errors) => {
+        const messages = Object.values(errors).flat();
+        messages.forEach((msg) => toast.error(msg));
+      },
+
+      onFinish: () => {
+        // optional: focus something or reset loading state
       }
     });
   };
