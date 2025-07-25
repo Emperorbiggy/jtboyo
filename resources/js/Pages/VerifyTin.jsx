@@ -111,12 +111,24 @@ export default function VerifyTin() {
           </button>
         </div>
 
-        {result && (
-          <div className="mt-6 bg-green-50 border border-green-200 p-4 rounded text-sm">
-            <h3 className="font-semibold text-green-800 mb-2">Verification Result:</h3>
-            <pre className="whitespace-pre-wrap text-gray-700 text-xs">{JSON.stringify(result, null, 2)}</pre>
-          </div>
-        )}
+        {result && result.Taxpayer && (
+  <div className="mt-8 max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 border border-green-300">
+    <h3 className="text-lg font-semibold text-green-800 mb-4">Verification Result</h3>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
+      <div><span className="font-medium">TIN:</span> {result.Taxpayer.tin}</div>
+      <div><span className="font-medium">First Name:</span> {result.Taxpayer.first_name}</div>
+      <div><span className="font-medium">Middle Name:</span> {result.Taxpayer.middle_name || 'N/A'}</div>
+      <div><span className="font-medium">Last Name:</span> {result.Taxpayer.last_name}</div>
+      <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
+      <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
+      <div><span className="font-medium">Date of Birth:</span> {result.Taxpayer.date_of_birth}</div>
+      <div><span className="font-medium">Registration Date:</span> {result.Taxpayer.date_of_registration}</div>
+      <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
+      <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+    </div>
+  </div>
+)}
+
       </div>
     </DashboardLayout>
   );
