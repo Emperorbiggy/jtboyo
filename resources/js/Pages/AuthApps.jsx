@@ -1,230 +1,258 @@
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/Layouts/DashboardLayout';
-import axios from 'axios';
 import { Head } from '@inertiajs/react';
-import { FaPlus, FaCopy, FaEllipsisV } from 'react-icons/fa';
-import toast, { Toaster } from 'react-hot-toast';
+import DashboardLayout from '@/Layouts/DashboardLayout';
+import { FaPlusCircle, FaCopy, FaEllipsisV } from 'react-icons/fa';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
-export default function CreateApp() {
+export default function AuthAppIndex() {
   const [apps, setApps] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    app_name: '',
-    whitelisted_ips: '',
-    description: '',
-  });
-  const [editMode, setEditMode] = useState(false);
-  const [editAppId, setEditAppId] = useState(null);
-  const [showToken, setShowToken] = useState({});
-
-  useEffect(() => {
-    fetchApps();
-  }, []);
+  const [form, setForm] = useState({ app_name: '', whitelisted_ips: '', description: '' });
+  const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [dropdownOpenId, setDropdownOpenId] = useState(null);
+  const [showTokenId, setShowTokenId] = useState(null);
 
   const fetchApps = async () => {
     try {
       const response = await axios.get('/api/v1/auth-apps');
       setApps(response.data.data);
     } catch (err) {
-      toast.error('Failed to fetch apps');
+      toast.error('Failed to load apps');
     }
   };
 
-  const handleChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+  useEffect(() => {
+    fetchApps();
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      if (editMode && editAppId) {
-        await axios.put(`/api/v1/auth-apps/${editAppId}`, formData);
-        toast.success('App updated');
+      if (editingId) {
+        await axios.put(`/api/v1/auth-apps/${editingId}`, form);
+        toast.success('App updated successfully!');
       } else {
-        await axios.post('/api/v1/generate-token', formData);
-        toast.success('App created');
+        await axios.post('/api/v1/generate-token', form);
+        toast.success('Token generated successfully!');
       }
 
-      setFormData({ app_name: '', whitelisted_ips: '', description: '' });
-      setEditAppId(null);
-      setEditMode(false);
+      setForm({ app_name: '', whitelisted_ips: '', description: '' });
       setShowModal(false);
+      setEditingId(null);
       fetchApps();
-    } catch (err) {
-      toast.error('Submission failed');
+    } catch (error) {
+      if (error.response?.status === 422) {
+        Object.values(error.response.data.messages).flat().forEach((msg) => toast.error(msg));
+      } else {
+        toast.error('Something went wrong.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEdit = (app) => {
-    setFormData({
+    setForm({
       app_name: app.app_name,
-      whitelisted_ips: app.whitelisted_ips.join(','),
+      whitelisted_ips: app.whitelisted_ips.join(', '),
       description: app.description || '',
     });
-    setEditMode(true);
-    setEditAppId(app.id);
+    setEditingId(app.id);
     setShowModal(true);
   };
 
-  const toggleStatus = async (app) => {
+  const handleToggleStatus = async (id) => {
     try {
-      await axios.put(`/api/v1/auth-apps/${app.id}/toggle-status`);
-      toast.success('Status updated');
+      await axios.patch(`/api/v1/auth-apps/${id}/status`);
+      toast.success('Status updated!');
       fetchApps();
-    } catch (err) {
-      toast.error('Status update failed');
+    } catch {
+      toast.error('Failed to update status.');
     }
   };
 
-  const copyToken = (token) => {
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this app?')) return;
+    try {
+      await axios.delete(`/api/v1/auth-apps/${id}`);
+      toast.success('App deleted.');
+      fetchApps();
+    } catch {
+      toast.error('Failed to delete.');
+    }
+  };
+
+  const handleCopyToken = (token) => {
     navigator.clipboard.writeText(token);
-    toast.success('Token copied');
+    toast.success('Token copied!');
   };
 
   return (
-    <DashboardLayout>
-      <Head title="Auth Apps" />
-      <Toaster />
-
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Auth Apps</h1>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={() => {
-            setShowModal(true);
-            setEditMode(false);
-            setFormData({ app_name: '', whitelisted_ips: '', description: '' });
-          }}
-        >
-          <FaPlus className="inline-block mr-2" />
-          Add App
-        </button>
-      </div>
-
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {apps.map(app => (
-          <div key={app.id} className="border rounded-lg shadow p-4 relative">
-            <div className="absolute top-2 right-2">
-              <Dropdown
-                onEdit={() => handleEdit(app)}
-                onToggle={() => toggleStatus(app)}
-                isActive={app.status}
-              />
-            </div>
-            <h2 className="text-lg font-bold">{app.app_name}</h2>
-            <p className="text-sm text-gray-600 mt-1">{app.description}</p>
-            <div className="mt-2">
-              <label className="text-sm text-gray-500">Token:</label>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-sm bg-gray-100 px-2 py-1 rounded break-all">
-                  {showToken[app.id] ? app.token : '••••••••••••••••••'}
-                </span>
-                <button
-                  onClick={() =>
-                    setShowToken(prev => ({ ...prev, [app.id]: !prev[app.id] }))
-                  }
-                  className="text-xs underline text-blue-600"
-                >
-                  {showToken[app.id] ? 'Hide' : 'Show'}
-                </button>
-                <FaCopy
-                  className="cursor-pointer text-gray-600"
-                  onClick={() => copyToken(app.token)}
-                />
-              </div>
-            </div>
-            <div className="mt-2">
-              <span className={`text-xs px-2 py-1 rounded-full ${app.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {app.status ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-            <h2 className="text-lg font-bold mb-4">{editMode ? 'Edit App' : 'Create App'}</h2>
-            <div className="space-y-3">
-              <input
-                type="text"
-                name="app_name"
-                value={formData.app_name}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-                placeholder="App Name"
-              />
-              <input
-                type="text"
-                name="whitelisted_ips"
-                value={formData.whitelisted_ips}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-                placeholder="Whitelisted IPs (comma-separated)"
-              />
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full border rounded p-2"
-                placeholder="Description"
-              />
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="bg-gray-300 text-gray-800 px-4 py-2 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSubmit}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  {editMode ? 'Update' : 'Save'}
-                </button>
-              </div>
-            </div>
-          </div>
+    <>
+      <Head title="Authorized Apps" />
+      <DashboardLayout>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-green-700">Authorized Apps</h1>
+          <button
+            onClick={() => {
+              setForm({ app_name: '', whitelisted_ips: '', description: '' });
+              setEditingId(null);
+              setShowModal(true);
+            }}
+            className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800 flex items-center gap-2"
+          >
+            <FaPlusCircle /> New App
+          </button>
         </div>
-      )}
-    </DashboardLayout>
+
+        <div className="overflow-x-auto bg-white shadow rounded-lg p-4">
+          <table className="min-w-full table-auto text-sm">
+            <thead>
+              <tr className="text-left border-b">
+                <th className="py-2 px-4">App Name</th>
+                <th className="py-2 px-4">Token</th>
+                <th className="py-2 px-4">Whitelisted IPs</th>
+                <th className="py-2 px-4">Status</th>
+                <th className="py-2 px-4">Last Access</th>
+                <th className="py-2 px-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {apps.map((app) => (
+                <tr key={app.id} className="border-b hover:bg-gray-50">
+                  <td className="py-2 px-4">{app.app_name}</td>
+                  <td className="py-2 px-4 text-xs">
+                    {showTokenId === app.id ? (
+                      <span className="break-all">{app.token}</span>
+                    ) : (
+                      '••••••••••••••••'
+                    )}
+                    <button
+                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      onClick={() => {
+                        if (showTokenId === app.id) {
+                          setShowTokenId(null);
+                        } else {
+                          setShowTokenId(app.id);
+                          handleCopyToken(app.token);
+                        }
+                      }}
+                      title="Copy token"
+                    >
+                      <FaCopy />
+                    </button>
+                  </td>
+                  <td className="py-2 px-4">{app.whitelisted_ips?.join(', ')}</td>
+                  <td className="py-2 px-4">
+                    <span
+                      className={`inline-block px-2 py-1 rounded-full text-xs ${
+                        app.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}
+                    >
+                      {app.status ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="py-2 px-4">{app.last_accessed_at || 'Never'}</td>
+                  <td className="py-2 px-4 relative">
+                    <button onClick={() => setDropdownOpenId(dropdownOpenId === app.id ? null : app.id)}>
+                      <FaEllipsisV />
+                    </button>
+                    {dropdownOpenId === app.id && (
+                      <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow z-10">
+                        <button
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                          onClick={() => handleEdit(app)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                          onClick={() => handleToggleStatus(app.id)}
+                        >
+                          {app.status ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
+                          onClick={() => handleDelete(app.id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+              <h2 className="text-xl font-bold text-green-700 mb-4">
+                {editingId ? 'Edit App' : 'Register New App'}
+              </h2>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium">App Name</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded p-2"
+                    value={form.app_name}
+                    onChange={(e) => setForm({ ...form, app_name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Whitelisted IPs</label>
+                  <input
+                    type="text"
+                    className="w-full border border-gray-300 rounded p-2"
+                    placeholder="Comma separated"
+                    value={form.whitelisted_ips}
+                    onChange={(e) => setForm({ ...form, whitelisted_ips: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium">Description</label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded p-2"
+                    rows={3}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="text-gray-600 hover:text-black"
+                    onClick={() => {
+                      setShowModal(false);
+                      setEditingId(null);
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+                    disabled={loading}
+                  >
+                    {loading ? 'Submitting...' : editingId ? 'Update' : 'Submit'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </DashboardLayout>
+    </>
   );
 }
-
-const Dropdown = ({ onEdit, onToggle, isActive }) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <FaEllipsisV
-        onClick={() => setOpen(!open)}
-        className="cursor-pointer text-gray-600"
-      />
-      {open && (
-        <div className="absolute right-0 mt-2 w-32 bg-white border shadow rounded z-10">
-          <button
-            onClick={() => {
-              setOpen(false);
-              onEdit();
-            }}
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-          >
-            Edit
-          </button>
-          <button
-            onClick={() => {
-              setOpen(false);
-              onToggle();
-            }}
-            className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-          >
-            {isActive ? 'Deactivate' : 'Activate'}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
