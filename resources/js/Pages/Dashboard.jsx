@@ -18,15 +18,15 @@ export default function Dashboard() {
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* New TIN Verification Buttons */}
           <Card
-            title="Individual TIN Verification"
+            title="TIN Verification"
             icon={<FaIdCard className="text-4xl text-green-600" />}
-            route="/tin-verification/individual"
+            route="/verify"
           />
-          <Card
+          {/* <Card
             title="Non-Individual TIN Verification"
             icon={<FaIdBadge className="text-4xl text-green-600" />}
             route="/tin-verification/non-individual"
-          />
+          /> */}
 
           {/* Existing Cards */}
           <Card
