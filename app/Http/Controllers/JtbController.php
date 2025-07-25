@@ -257,9 +257,12 @@ public function verifyNonIndividualTin(Request $request)
     }
 
     $tin = $request->input('tin');
-    $response = $this->jtbService->verifyNonIndividualTin($tin, $token);
+
+    
+    $response = $this->jtbService->verifyNonIndividualTin($token, $tin);
 
     return response()->json($response);
 }
+
 
 }
