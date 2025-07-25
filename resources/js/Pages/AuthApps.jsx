@@ -13,6 +13,7 @@ export default function AuthAppIndex() {
   const [editingId, setEditingId] = useState(null);
   const [dropdownOpenId, setDropdownOpenId] = useState(null);
   const [showTokenId, setShowTokenId] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'delete' | 'status', id: number }
 
   const fetchApps = async () => {
     try {
@@ -30,7 +31,6 @@ export default function AuthAppIndex() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (editingId) {
         await axios.put(`/api/v1/auth-apps/${editingId}`, form);
@@ -39,7 +39,6 @@ export default function AuthAppIndex() {
         await axios.post('/api/v1/generate-token', form);
         toast.success('Token generated successfully!');
       }
-
       setForm({ app_name: '', whitelisted_ips: '', description: '' });
       setShowModal(false);
       setEditingId(null);
@@ -76,7 +75,6 @@ export default function AuthAppIndex() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this app?')) return;
     try {
       await axios.delete(`/api/v1/auth-apps/${id}`);
       toast.success('App deleted.');
@@ -171,13 +169,13 @@ export default function AuthAppIndex() {
                         </button>
                         <button
                           className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                          onClick={() => handleToggleStatus(app.id)}
+                          onClick={() => setConfirmAction({ type: 'status', id: app.id })}
                         >
                           {app.status ? 'Deactivate' : 'Activate'}
                         </button>
                         <button
                           className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"
-                          onClick={() => handleDelete(app.id)}
+                          onClick={() => setConfirmAction({ type: 'delete', id: app.id })}
                         >
                           Delete
                         </button>
@@ -190,7 +188,7 @@ export default function AuthAppIndex() {
           </table>
         </div>
 
-        {/* Modal */}
+        {/* App Modal */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
@@ -249,6 +247,42 @@ export default function AuthAppIndex() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Confirm Modal */}
+        {confirmAction && (
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">
+                {confirmAction.type === 'delete' ? 'Delete App' : 'Change App Status'}
+              </h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to {confirmAction.type === 'delete' ? 'delete this app' : 'toggle the status'}?
+              </p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setConfirmAction(null)}
+                  className="px-4 py-2 text-gray-600 hover:text-black"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    const { type, id } = confirmAction;
+                    setConfirmAction(null);
+                    if (type === 'delete') {
+                      await handleDelete(id);
+                    } else {
+                      await handleToggleStatus(id);
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </div>
         )}
