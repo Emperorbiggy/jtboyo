@@ -27,6 +27,10 @@ Route::get('/individual', function () {
     return Inertia::render('IndividualTaxPayer');
 });
 
+Route::get('/verify', function () {
+    return Inertia::render('VerifyTin');
+});
+
 Route::get('/non-individual', function () {
     return Inertia::render('NonIndividualTaxPayers');
 });
