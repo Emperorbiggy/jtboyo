@@ -96,15 +96,13 @@ export default function AuthAppIndex() {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-green-700">Authorized Apps</h1>
       {/* Back Button */}
-      <div className="mb-4">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 rounded hover:bg-gray-200"
-        >
-          <FaArrowLeft className="mr-2" />
-          Back to Dashboard
-        </Link>
-      </div>
+     <Link
+            href={`/dashboard`}
+            className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
+          >
+            ← Back to Dashboard
+          </Link>
+
           <button
             onClick={() => {
               setForm({ app_name: '', whitelisted_ips: '', description: '' });
