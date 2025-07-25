@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import DashboardLayout from '@/Layouts/DashboardLayout';
 import { FaPlusCircle, FaCopy, FaEllipsisV } from 'react-icons/fa';
 import toast from 'react-hot-toast';
