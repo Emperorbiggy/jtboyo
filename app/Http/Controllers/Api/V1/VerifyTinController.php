@@ -121,11 +121,11 @@ class VerifyTinController extends Controller
     }
 }
 
-// TIN not found
-if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
+// Handle missing TIN (003 and 005 both mean record not found)
+if (in_array($result['ResponseCode'] ?? '', ['003', '004', '005'])) {
     return response()->json([
         'success' => false,
-        'message' => 'No record found for this TIN.',
+        'message' => $result['ResponseDescription'] ?? 'No record found for this TIN.',
         'status_code' => 404,
     ], 404);
 }
@@ -133,7 +133,7 @@ if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
 // General failure
 return response()->json([
     'success' => false,
-    'message' => 'TIN verification failed.',
+    'message' => $result['ResponseDescription'] ?? 'TIN verification failed.',
     'status_code' => 400,
 ], 400);
 
