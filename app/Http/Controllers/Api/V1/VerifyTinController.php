@@ -78,25 +78,26 @@ class VerifyTinController extends Controller
         Log::info('JTB API response received.', ['response' => $result]);
 
         // 7. Process response
-        if (isset($result['code']) && $result['code'] === '001') {
-            return response()->json([
-                'success' => true,
-                'message' => 'TIN verified successfully.',
-                'data' => $result['data'] ?? [],
-            ], 200);
-        }
+       if (isset($result['ResponseCode']) && $result['ResponseCode'] === '001') {
+    return response()->json([
+        'success' => true,
+        'message' => 'TIN verified successfully.',
+        'data' => $result['Taxpayer'] ?? [], // adapt to structure
+    ], 200);
+}
 
-        if (isset($result['code']) && $result['code'] === '003') {
-            return response()->json([
-                'success' => false,
-                'message' => 'No record found.',
-            ], 404);
-        }
+if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
+    return response()->json([
+        'success' => false,
+        'message' => 'No record found.',
+    ], 404);
+}
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Verification failed.',
-        ], 400);
+return response()->json([
+    'success' => false,
+    'message' => 'Verification failed.',
+], 400);
+
 
     } catch (\Exception $e) {
         Log::error('Verification exception occurred.', [
