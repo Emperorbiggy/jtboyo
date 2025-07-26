@@ -4,7 +4,7 @@ import { Head, Link } from '@inertiajs/react';
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function VerifyTin() {
-  const [type, setType] = useState('individual'); // 'individual' or 'non-individual'
+  const [type, setType] = useState('individual');
   const [tin, setTin] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -55,7 +55,7 @@ export default function VerifyTin() {
       <Toaster position="top-right" />
 
       <div className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <Link
             href="/dashboard"
             className="bg-green-700 text-white px-4 py-2 rounded hover:bg-green-800"
@@ -63,7 +63,7 @@ export default function VerifyTin() {
             ← Back to Dashboard
           </Link>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <button
               className={`px-4 py-2 rounded transition ${
                 type === 'individual'
@@ -87,7 +87,7 @@ export default function VerifyTin() {
           </div>
         </div>
 
-        <div className="max-w-lg mx-auto bg-white rounded shadow p-6">
+        <div className="w-full max-w-lg mx-auto bg-white rounded shadow p-6">
           <div className="mb-4">
             <label htmlFor="tin" className="block text-sm font-medium text-gray-700 mb-2">
               Enter {type === 'individual' ? 'Individual' : 'Non-Individual'} TIN:
@@ -112,41 +112,38 @@ export default function VerifyTin() {
         </div>
 
         {result && result.Taxpayer && (
-  <div className="mt-8 max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 border border-green-300">
-    <h3 className="text-lg font-semibold text-green-800 mb-4">Verification Result</h3>
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
-      <div><span className="font-medium">TIN:</span> {result.Taxpayer.tin}</div>
+          <div className="mt-8 w-full max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 border border-green-300 overflow-auto">
+            <h3 className="text-lg font-semibold text-green-800 mb-4">Verification Result</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
+              <div><span className="font-medium">TIN:</span> {result.Taxpayer.tin}</div>
 
-      {/* Check for Individual */}
-      {result.Taxpayer.first_name ? (
-        <>
-          <div><span className="font-medium">First Name:</span> {result.Taxpayer.first_name}</div>
-          <div><span className="font-medium">Middle Name:</span> {result.Taxpayer.middle_name || 'N/A'}</div>
-          <div><span className="font-medium">Last Name:</span> {result.Taxpayer.last_name}</div>
-          <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
-          <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
-          <div><span className="font-medium">Date of Birth:</span> {result.Taxpayer.date_of_birth}</div>
-          <div><span className="font-medium">Registration Date:</span> {result.Taxpayer.date_of_registration}</div>
-          <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
-          <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
-        </>
-      ) : (
-        // Non-Individual
-        <>
-          <div><span className="font-medium">Registered Name:</span> {result.Taxpayer.registered_name}</div>
-          <div><span className="font-medium">Registration Number:</span> {result.Taxpayer.registration_number}</div>
-          <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
-          <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
-          <div><span className="font-medium">Date of Incorporation:</span> {result.Taxpayer.date_of_incorporation}</div>
-          <div><span className="font-medium">Date of Registration:</span> {result.Taxpayer.date_of_registration}</div>
-          <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
-          <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
-        </>
-      )}
-    </div>
-  </div>
-)}
-
+              {result.Taxpayer.first_name ? (
+                <>
+                  <div><span className="font-medium">First Name:</span> {result.Taxpayer.first_name}</div>
+                  <div><span className="font-medium">Middle Name:</span> {result.Taxpayer.middle_name || 'N/A'}</div>
+                  <div><span className="font-medium">Last Name:</span> {result.Taxpayer.last_name}</div>
+                  <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
+                  <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
+                  <div><span className="font-medium">Date of Birth:</span> {result.Taxpayer.date_of_birth}</div>
+                  <div><span className="font-medium">Registration Date:</span> {result.Taxpayer.date_of_registration}</div>
+                  <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
+                  <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+                </>
+              ) : (
+                <>
+                  <div><span className="font-medium">Registered Name:</span> {result.Taxpayer.registered_name}</div>
+                  <div><span className="font-medium">Registration Number:</span> {result.Taxpayer.registration_number}</div>
+                  <div><span className="font-medium">Phone:</span> {result.Taxpayer.phone_no}</div>
+                  <div><span className="font-medium">Email:</span> {result.Taxpayer.email}</div>
+                  <div><span className="font-medium">Date of Incorporation:</span> {result.Taxpayer.date_of_incorporation}</div>
+                  <div><span className="font-medium">Date of Registration:</span> {result.Taxpayer.date_of_registration}</div>
+                  <div><span className="font-medium">Tax Authority:</span> {result.Taxpayer.tax_authority}</div>
+                  <div><span className="font-medium">Tax Office:</span> {result.Taxpayer.tax_office || 'N/A'}</div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
