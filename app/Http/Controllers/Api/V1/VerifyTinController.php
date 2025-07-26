@@ -27,34 +27,35 @@ class VerifyTinController extends Controller
 
         $token = $matches[1];
 
-        // 2. Find app by token
-        $authApp = AuthApp::where('token', $token)->first();
+        // 2. Find app by token and verify
+        $authApp = AuthApp::where('token', $token)->where('status', true)->first();
         if (!$authApp) {
-            return response()->json(['message' => 'Invalid token.'], 401);
+            return response()->json(['message' => 'Invalid or inactive token.'], 401);
         }
 
-        // 3. Validate IP address
+        // 3. Check IP whitelist (assumes cast to array in model)
         $requestIp = $request->ip();
-        $whitelistedIps = is_string($authApp->whitelisted_ips)
-    ? array_map('trim', explode(',', $authApp->whitelisted_ips))
-    : ($authApp->whitelisted_ips ?? []);
+        $whitelistedIps = is_array($authApp->whitelisted_ips) 
+            ? $authApp->whitelisted_ips 
+            : explode(',', (string) $authApp->whitelisted_ips);
 
+        $whitelistedIps = array_map('trim', $whitelistedIps);
 
         if (!in_array($requestIp, $whitelistedIps)) {
             return response()->json(['message' => 'Your IP is not allowed to make this request.'], 403);
         }
 
-        // 4. Validate input
+        // 4. Validate request data
         $validated = $request->validate([
             'tin' => 'required|string',
             'type' => 'required|string|in:individual,non-individual',
         ]);
 
-        // 5. Get TIN and generate token
         $tin = $validated['tin'];
         $type = $validated['type'];
 
         try {
+            // 5. Generate JTB token
             $jtbToken = $this->jtbService->generateTokenId();
 
             // 6. Verify TIN
@@ -62,7 +63,7 @@ class VerifyTinController extends Controller
                 ? $this->jtbService->verifyIndividualTin($tin, $jtbToken)
                 : $this->jtbService->verifyNonIndividualTin($jtbToken, $tin);
 
-            // 7. Handle response
+            // 7. Process response
             if (isset($result['code']) && $result['code'] === '001') {
                 return response()->json([
                     'success' => true,
@@ -75,7 +76,7 @@ class VerifyTinController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'No record found.',
-                ], 402);
+                ], 404);
             }
 
             return response()->json([
