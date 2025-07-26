@@ -31,7 +31,7 @@ class VerifyApiAccess
             return response()->json(['error' => 'Missing API token.'], 401);
         }
 
-        $authApp = AuthApp::where('token', $token)->where('status', true)->first();
+        $authApp = AuthApp::where('token', $token)->where('status', 1)->first();
 
         if (!$authApp) {
             return response()->json(['error' => 'Invalid or inactive token.'], 401);
