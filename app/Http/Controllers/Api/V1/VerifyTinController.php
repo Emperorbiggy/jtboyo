@@ -81,36 +81,47 @@ class VerifyTinController extends Controller
        if (isset($result['ResponseCode']) && $result['ResponseCode'] === '001') {
     $taxpayer = $result['Taxpayer'];
 
-    $isIndividual = strtolower($taxpayer['taxpayer_type'] ?? '') === 'individual';
-
-    $data = [
-        'tin' => $taxpayer['tin'] ?? null,
-        'taxpayer_type' => $taxpayer['taxpayer_type'] ?? null,
-        'phone_no' => $taxpayer['phone_no'] ?? null,
-        'email' => $taxpayer['email'] ?? null,
-        'date_of_registration' => $taxpayer['date_of_registration'] ?? null,
-        'tax_authority' => $taxpayer['tax_authority'] ?? null,
-        'tax_office' => $taxpayer['tax_office'] ?? null,
-    ];
-
-    if ($isIndividual) {
-        $data['first_name'] = $taxpayer['first_name'] ?? null;
-        $data['middle_name'] = $taxpayer['middle_name'] ?? null;
-        $data['last_name'] = $taxpayer['last_name'] ?? null;
-        $data['date_of_birth'] = $taxpayer['date_of_birth'] ?? null;
+    if (isset($taxpayer['first_name'])) {
+        // Individual TIN response
+        return response()->json([
+            'success' => true,
+            'message' => 'TIN verified successfully.',
+            'status_code' => 200,
+            'data' => [
+                'tin' => $taxpayer['tin'] ?? null,
+                'first_name' => $taxpayer['first_name'] ?? null,
+                'middle_name' => $taxpayer['middle_name'] ?? null,
+                'last_name' => $taxpayer['last_name'] ?? null,
+                'phone_no' => $taxpayer['phone_no'] ?? null,
+                'email' => $taxpayer['email'] ?? null,
+                'date_of_birth' => $taxpayer['date_of_birth'] ?? null,
+                'date_of_registration' => $taxpayer['date_of_registration'] ?? null,
+                'tax_authority' => $taxpayer['tax_authority'] ?? null,
+                'tax_office' => $taxpayer['tax_office'] ?? null,
+            ]
+        ], 200);
     } else {
-        $data['organization_name'] = $taxpayer['organization_name'] ?? ($taxpayer['business_name'] ?? null);
-        $data['rc_number'] = $taxpayer['rc_number'] ?? null;
+        // Non-individual TIN response
+        return response()->json([
+            'success' => true,
+            'message' => 'TIN verified successfully.',
+            'status_code' => 200,
+            'data' => [
+                'tin' => $taxpayer['tin'] ?? null,
+                'registered_name' => $taxpayer['registered_name'] ?? null,
+                'registration_number' => $taxpayer['registration_number'] ?? null,
+                'phone_no' => $taxpayer['phone_no'] ?? null,
+                'email' => $taxpayer['email'] ?? null,
+                'date_of_incorporation' => $taxpayer['date_of_incorporation'] ?? null,
+                'date_of_registration' => $taxpayer['date_of_registration'] ?? null,
+                'tax_authority' => $taxpayer['tax_authority'] ?? null,
+                'tax_office' => $taxpayer['tax_office'] ?? null,
+            ]
+        ], 200);
     }
-
-    return response()->json([
-        'success' => true,
-        'message' => 'TIN verified successfully.',
-        'status_code' => 200,
-        'data' => $data,
-    ], 200);
 }
 
+// TIN not found
 if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
     return response()->json([
         'success' => false,
@@ -119,6 +130,7 @@ if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
     ], 404);
 }
 
+// General failure
 return response()->json([
     'success' => false,
     'message' => 'TIN verification failed.',
