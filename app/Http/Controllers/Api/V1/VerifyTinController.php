@@ -19,12 +19,13 @@ class VerifyTinController extends Controller
     public function verify(Request $request)
     {
         // 1. Validate token from Authorization header
-        $token = $request->header('Authorization');
+        $authHeader = $request->header('Authorization');
 
-if (!$token) {
-    return response()->json(['message' => 'Authorization token missing or invalid.'], 401);
-}
+        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            return response()->json(['message' => 'Authorization token missing or invalid.'], 401);
+        }
 
+        $token = $matches[1];
 
         // 2. Find app by token and verify
         $authApp = AuthApp::where('token', $token)->where('status', true)->first();
