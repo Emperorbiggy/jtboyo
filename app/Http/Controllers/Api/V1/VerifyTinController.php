@@ -82,20 +82,34 @@ class VerifyTinController extends Controller
     return response()->json([
         'success' => true,
         'message' => 'TIN verified successfully.',
-        'data' => $result['Taxpayer'] ?? [], // adapt to structure
+        'status_code' => 200,
+        'data' => [
+            'tin' => $result['Taxpayer']['tin'] ?? null,
+            'first_name' => $result['Taxpayer']['first_name'] ?? null,
+            'middle_name' => $result['Taxpayer']['middle_name'] ?? null,
+            'last_name' => $result['Taxpayer']['last_name'] ?? null,
+            'phone_no' => $result['Taxpayer']['phone_no'] ?? null,
+            'email' => $result['Taxpayer']['email'] ?? null,
+            'date_of_birth' => $result['Taxpayer']['date_of_birth'] ?? null,
+            'date_of_registration' => $result['Taxpayer']['date_of_registration'] ?? null,
+            'tax_authority' => $result['Taxpayer']['tax_authority'] ?? null,
+            'tax_office' => $result['Taxpayer']['tax_office'] ?? null,
+        ]
     ], 200);
 }
 
 if (isset($result['ResponseCode']) && $result['ResponseCode'] === '003') {
     return response()->json([
         'success' => false,
-        'message' => 'No record found.',
+        'message' => 'No record found for this TIN.',
+        'status_code' => 404,
     ], 404);
 }
 
 return response()->json([
     'success' => false,
-    'message' => 'Verification failed.',
+    'message' => 'TIN verification failed.',
+    'status_code' => 400,
 ], 400);
 
 
