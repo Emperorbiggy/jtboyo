@@ -37,15 +37,19 @@ class VerifyApiAccess
             return response()->json(['error' => 'Invalid or inactive token.'], 401);
         }
 
-        // Convert comma-separated IPs to an array
-        $whitelistedIpString = $authApp->whitelisted_ips ?? '';
-        $whitelistedIps = array_map('trim', explode(',', $whitelistedIpString));
+        // Normalize whitelisted_ips
+        if (is_array($authApp->whitelisted_ips)) {
+            $whitelistedIps = $authApp->whitelisted_ips;
+        } else {
+            $whitelistedIps = explode(',', (string) $authApp->whitelisted_ips);
+            $whitelistedIps = array_map('trim', $whitelistedIps);
+        }
 
         if (!in_array($requestIp, $whitelistedIps)) {
             return response()->json(['error' => 'Your IP address is not whitelisted.'], 403);
         }
 
-        // Update usage tracking
+        // Track usage
         $authApp->increment('request_count');
         $authApp->update(['last_accessed_at' => now()]);
 
