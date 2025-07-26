@@ -35,7 +35,10 @@ class VerifyTinController extends Controller
 
         // 3. Validate IP address
         $requestIp = $request->ip();
-        $whitelistedIps = $authApp->whitelisted_ips ?? [];
+        $whitelistedIps = is_string($authApp->whitelisted_ips)
+    ? array_map('trim', explode(',', $authApp->whitelisted_ips))
+    : ($authApp->whitelisted_ips ?? []);
+
 
         if (!in_array($requestIp, $whitelistedIps)) {
             return response()->json(['message' => 'Your IP is not allowed to make this request.'], 403);
