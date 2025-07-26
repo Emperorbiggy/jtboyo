@@ -28,7 +28,8 @@ class VerifyTinController extends Controller
         $token = $matches[1];
 
         // 2. Find app by token and verify
-        $authApp = AuthApp::where('token', $token)->where('status', true)->first();
+        $authApp = AuthApp::where('token', $token)->where('status', 1)->first();
+
         if (!$authApp) {
             return response()->json(['message' => 'Invalid or inactive token.'], 401);
         }
