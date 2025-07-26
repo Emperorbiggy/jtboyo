@@ -79,22 +79,35 @@ class VerifyTinController extends Controller
 
         // 7. Process response
        if (isset($result['ResponseCode']) && $result['ResponseCode'] === '001') {
+    $taxpayer = $result['Taxpayer'];
+
+    $isIndividual = strtolower($taxpayer['taxpayer_type'] ?? '') === 'individual';
+
+    $data = [
+        'tin' => $taxpayer['tin'] ?? null,
+        'taxpayer_type' => $taxpayer['taxpayer_type'] ?? null,
+        'phone_no' => $taxpayer['phone_no'] ?? null,
+        'email' => $taxpayer['email'] ?? null,
+        'date_of_registration' => $taxpayer['date_of_registration'] ?? null,
+        'tax_authority' => $taxpayer['tax_authority'] ?? null,
+        'tax_office' => $taxpayer['tax_office'] ?? null,
+    ];
+
+    if ($isIndividual) {
+        $data['first_name'] = $taxpayer['first_name'] ?? null;
+        $data['middle_name'] = $taxpayer['middle_name'] ?? null;
+        $data['last_name'] = $taxpayer['last_name'] ?? null;
+        $data['date_of_birth'] = $taxpayer['date_of_birth'] ?? null;
+    } else {
+        $data['organization_name'] = $taxpayer['organization_name'] ?? ($taxpayer['business_name'] ?? null);
+        $data['rc_number'] = $taxpayer['rc_number'] ?? null;
+    }
+
     return response()->json([
         'success' => true,
         'message' => 'TIN verified successfully.',
         'status_code' => 200,
-        'data' => [
-            'tin' => $result['Taxpayer']['tin'] ?? null,
-            'first_name' => $result['Taxpayer']['first_name'] ?? null,
-            'middle_name' => $result['Taxpayer']['middle_name'] ?? null,
-            'last_name' => $result['Taxpayer']['last_name'] ?? null,
-            'phone_no' => $result['Taxpayer']['phone_no'] ?? null,
-            'email' => $result['Taxpayer']['email'] ?? null,
-            'date_of_birth' => $result['Taxpayer']['date_of_birth'] ?? null,
-            'date_of_registration' => $result['Taxpayer']['date_of_registration'] ?? null,
-            'tax_authority' => $result['Taxpayer']['tax_authority'] ?? null,
-            'tax_office' => $result['Taxpayer']['tax_office'] ?? null,
-        ]
+        'data' => $data,
     ], 200);
 }
 
