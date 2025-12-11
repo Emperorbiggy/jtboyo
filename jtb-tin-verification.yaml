@@ -1,0 +1,96 @@
+openapi: 3.0.3
+info:
+  title: JTB TIN Verification API
+  version: "1.0"
+  description: >
+    API to verify individual and non-individual TINs via JTB.
+servers:
+  - url: https://jtb.oyostate.gov.ng/api/v1
+    description: Production server
+paths:
+  /verify-tin:
+    post:
+      summary: Verify Individual or Non-Individual TIN
+      description: |
+        Use your API token (Bearer in Authorization header) and JSON body to verify tax identification numbers.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - tin
+              properties:
+                type:
+                  type: string
+                  enum: [individual, non-individual]
+                  description: Type of taxpayer
+                tin:
+                  type: string
+                  description: 10‑digit TIN number
+      responses:
+        "200":
+          description: Verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "TIN verified successfully."
+                  status_code:
+                    type: integer
+                    example: 200
+                  data:
+                    type: object
+                    description: Taxpayer details (varies by type)
+        "400":
+          description: Verification failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "TIN verification failed."
+                  status_code:
+                    type: integer
+                    example: 400
+        "404":
+          description: Record not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Record not found"
+                  status_code:
+                    type: integer
+                    example: 404
+        "401":
+          description: Unauthorized - missing or invalid token / inactive
+        "403":
+          description: Forbidden - IP not whitelisted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
