@@ -49,6 +49,16 @@ export default function Dashboard() {
             icon={<FaPlusCircle className="text-4xl text-green-600" />}
             route="/add-asset"
           />
+          <Card
+            title="Resolve NIN (Individual)"
+            icon={<FaIdCard className="text-4xl text-green-600" />}
+            route="/resolve-nin"
+          />
+          <Card
+            title="Resolve CAC (Non-Individual)"
+            icon={<FaIdBadge className="text-4xl text-green-600" />}
+            route="/resolve-cac"
+          />
         </div>
       </DashboardLayout>
     </>

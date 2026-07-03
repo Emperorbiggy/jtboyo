@@ -26,7 +26,7 @@ class JtbService
     {
         try {
             Log::info('JTB Token Request Initiated', [
-                'url' => $this->baseUrl . '/GetTokenID',
+                'url' => $this->baseUrl . '/Account/login',
                 'payload' => [
                     'email' => $this->email,
                     'password' => $this->password,
@@ -34,7 +34,7 @@ class JtbService
                 ],
             ]);
 
-            $response = Http::timeout(15)->post($this->baseUrl . '/GetTokenID', [
+            $response = Http::timeout(15)->post($this->baseUrl . '/Account/login', [
                 'email' => $this->email,
                 'password' => $this->password,
                 'clientname' => $this->clientName,
@@ -260,5 +260,72 @@ class JtbService
         }
     }
 
+    public function resolveIndividualNin(string $token, string $nin, string $firstName, string $lastName, string $dateOfBirth)
+    {
+        $url = $this->baseUrl . '/TPIndividual/single/resolve?authtoken=' . $token;
+
+        $formattedDob = Carbon::parse($dateOfBirth)->format('d/m/Y');
+
+        $payload = [
+            'nin' => $nin,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'dateOfBirth' => $formattedDob,
+        ];
+
+        Log::info('Resolving Individual NIN for TaxID', [
+            'url' => $url,
+            'payload' => $payload,
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            Log::info('JTB NIN Resolution Response (Individual)', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error resolving individual NIN', ['message' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Individual NIN resolution failed.'];
+        }
+    }
+
+    public function resolveNonIndividualCac(string $token, string $cacRegNo, string $type)
+    {
+        $url = $this->baseUrl . '/TPNonIndividual/single/resolve?authtoken=' . $token;
+
+        $payload = [
+            'cacRegNo' => $cacRegNo,
+            'type' => $type,
+        ];
+
+        Log::info('Resolving Non-Individual CAC for TaxID', [
+            'url' => $url,
+            'payload' => $payload,
+        ]);
+
+        try {
+            $response = Http::withHeaders([
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+            ])->post($url, $payload);
+
+            Log::info('JTB CAC Resolution Response (Non-Individual)', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Error resolving non-individual CAC', ['message' => $e->getMessage()]);
+            return ['success' => false, 'message' => 'Non-Individual CAC resolution failed.'];
+        }
+    }
 
 }

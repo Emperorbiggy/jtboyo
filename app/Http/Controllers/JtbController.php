@@ -264,5 +264,79 @@ public function verifyNonIndividualTin(Request $request)
     return response()->json($response);
 }
 
+/**
+ * Resolve Individual NIN for TaxID retrieval and verification.
+ */
+public function resolveIndividualNin(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'nin' => 'required|string',
+        'firstName' => 'required|string',
+        'lastName' => 'required|string',
+        'dateOfBirth' => 'required|date',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $data = $validator->validated();
+
+    $response = $this->jtbService->resolveIndividualNin(
+        $token,
+        $data['nin'],
+        $data['firstName'],
+        $data['lastName'],
+        $data['dateOfBirth']
+    );
+
+    return response()->json($response);
+}
+
+/**
+ * Resolve Non-Individual CAC registration number for TaxID retrieval and verification.
+ */
+public function resolveNonIndividualCac(Request $request)
+{
+    $validator = Validator::make($request->all(), [
+        'cacRegNo' => 'required|string',
+        'type' => 'required|string|in:1,2,3,4,5',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
+
+    $token = session('jtb_token');
+    $expiresAt = session('jtb_token_expires_at');
+
+    if (!$token || now()->greaterThan($expiresAt)) {
+        auth()->logout();
+        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+    }
+
+    $data = $validator->validated();
+
+    $response = $this->jtbService->resolveNonIndividualCac($token, $data['cacRegNo'], $data['type']);
+
+    return response()->json($response);
+}
+
 
 }

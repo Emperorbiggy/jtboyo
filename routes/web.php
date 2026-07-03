@@ -31,6 +31,14 @@ Route::get('/verify', function () {
     return Inertia::render('VerifyTin');
 });
 
+Route::get('/resolve-nin', function () {
+    return Inertia::render('ResolveNin');
+});
+
+Route::get('/resolve-cac', function () {
+    return Inertia::render('ResolveCac');
+});
+
 Route::get('/non-individual', function () {
     return Inertia::render('NonIndividualTaxPayers');
 });
