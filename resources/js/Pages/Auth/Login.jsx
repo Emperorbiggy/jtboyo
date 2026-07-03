@@ -25,7 +25,7 @@ export default function Login({ status, canResetPassword }) {
 
   return (
     <>
-      <Head title="Login | Joint Tax Board" />
+      <Head title="Login | Joint Revenue Board" />
 
       <div
         className="min-h-screen bg-cover bg-center flex items-center justify-center relative"
@@ -39,7 +39,7 @@ export default function Login({ status, canResetPassword }) {
         {/* Login Box */}
         <div className="relative z-10 w-full max-w-md p-8 bg-white bg-opacity-90 rounded-xl shadow-lg border-t-4 border-[#0E7F1B]">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-[#0E7F1B]">Oyo State Joint Tax Board</h1>
+            <h1 className="text-2xl font-bold text-[#0E7F1B]">Oyo State Joint Revenue Board</h1>
             <p className="text-sm text-gray-600">Login to your dashboard</p>
           </div>
 

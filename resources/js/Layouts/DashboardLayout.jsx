@@ -25,7 +25,7 @@ export default function DashboardLayout({ children }) {
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-green-100">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-white shadow">
-        <div className="text-2xl font-bold text-green-700">Oyo Joint Tax Board</div>
+        <div className="text-2xl font-bold text-green-700">Oyo Joint Revenue Board</div>
         <div className="relative">
           <button
             className="flex items-center space-x-2"
