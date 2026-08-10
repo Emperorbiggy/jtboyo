@@ -6,7 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'react-hot-toast'; // ✅ Import Toaster
 
-const appName = import.meta.env.VITE_APP_NAME || 'JTBOYO';
+const appName = import.meta.env.VITE_APP_NAME || 'JRB OYO';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

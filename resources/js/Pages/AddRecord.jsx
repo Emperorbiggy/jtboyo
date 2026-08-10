@@ -93,7 +93,7 @@ export default function AddRecord() {
         <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              ['jtb_tin', 'JTB TIN *'],
+              ['jtb_tin', 'JRB TIN *'],
               ['tcc_number', 'TCC Number *'],
               ['tax_period', 'Tax Period *'],
               ['turnover', 'Turnover *'],

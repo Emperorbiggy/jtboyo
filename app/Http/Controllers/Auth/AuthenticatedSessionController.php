@@ -49,7 +49,7 @@ class AuthenticatedSessionController extends Controller
     $user = auth()->user();
     Log::info('👤 Authenticated User', ['email' => $user->email]);
 
-    if ($user->email === 'admin@jtb.oyostate.gov.ng') {
+    if ($user->email === 'admin@jrb.oyostate.gov.ng') {
         Log::info('🎯 Admin matched. Attempting to fetch token...');
 
         $token = $jtbService->generateTokenId();

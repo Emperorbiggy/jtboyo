@@ -11,10 +11,10 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@jtb.oyostate.gov.ng'],
+            ['email' => 'admin@jrb.oyostate.gov.ng'],
             [
                 'name' => 'admin',
-                'email' => 'admin@jtb.oyostate.gov.ng',
+                'email' => 'admin@jrb.oyostate.gov.ng',
                 'password' => Hash::make('password1234'),
             ]
         );
