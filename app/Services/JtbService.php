@@ -82,6 +82,20 @@ class JtbService
     {
         $url = $this->baseUrl . '/api/v1/Account/login';
 
+        // Fail loudly here rather than sending an empty login that comes back
+        // as a puzzling "Email is required" 400 from JRB.
+        if ($this->email === '' || $this->password === '') {
+            Log::error('JRB ✗ Login skipped: credentials are not configured', [
+                'JRB_EMAIL_set' => $this->email !== '',
+                'JRB_PASSWORD_set' => $this->password !== '',
+                'JRB_BASE_URL' => $this->baseUrl,
+                'JRB_CLIENT_NAME' => $this->clientName,
+                'hint' => 'Add JRB_EMAIL and JRB_PASSWORD to .env, then run: php artisan config:clear',
+            ]);
+
+            return null;
+        }
+
         $payload = [
             'email' => $this->email,
             'password' => $this->password,

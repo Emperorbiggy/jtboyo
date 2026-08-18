@@ -39,7 +39,8 @@ Route::get('/create-app', function () {
     return Inertia::render('AuthApps');
 });
 
-Route::get('/jrb/token', [JtbController::class, 'getToken']);
+// Connectivity/credentials check for the JRB API, as seen by the web process.
+Route::get('/jrb/token', [JtbController::class, 'getToken'])->middleware('auth');
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 

@@ -29,7 +29,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
 {
     Log::info('🔐 Entered store method of AuthenticatedSessionController');
 
@@ -47,9 +47,17 @@ class AuthenticatedSessionController extends Controller
 
     Log::info('👤 Authenticated User', ['email' => auth()->user()->email]);
 
-    // The JRB token is no longer fetched here. JtbService obtains and caches
-    // one on demand, so signing in never depends on JRB being reachable and
-    // no single hardcoded address is privileged over other users.
+    // A successful app login also logs in to JRB with the JRB_* service
+    // credentials, so the token is warm before the operator opens a page.
+    // Deliberately non-fatal: if JRB is down or unreachable the operator stays
+    // signed in, and JtbService will retry on the next call that needs it.
+    if ($jtbService->token()) {
+        Log::info('✅ JRB token ready');
+    } else {
+        Log::warning('⚠️ Signed in, but the JRB token could not be obtained — see the JRB ✗ entry above.');
+        session()->flash('jrb_warning', 'Signed in, but the JRB API could not be reached. Lookups may fail until it recovers.');
+    }
+
     return redirect()->intended(route('dashboard', absolute: false));
 }
     /**

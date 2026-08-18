@@ -24,24 +24,53 @@ class JtbController extends Controller
     }
 
     /**
-     * Generate a fresh token from JRB (manual trigger, optional).
+     * Force a fresh JRB login and report what this process actually sees.
+     *
+     * Reads config the same way every other call does, so it exposes .env
+     * problems that only affect the web server (a stale config cache, a save
+     * that dropped the JRB_* block) and would otherwise surface as a confusing
+     * "Email is required" 400 from JRB.
      */
     public function getToken(): JsonResponse
     {
+        $email = (string) config('services.jrb.email');
+        $password = (string) config('services.jrb.password');
+
+        $config = [
+            'JRB_BASE_URL' => config('services.jrb.base_url'),
+            'JRB_CLIENT_NAME' => config('services.jrb.client_name'),
+            'JRB_EMAIL' => $email !== '' ? $this->mask($email) : '(empty)',
+            'JRB_PASSWORD' => $password !== '' ? '(set, ' . strlen($password) . ' chars)' : '(empty)',
+            'config_cached' => file_exists(base_path('bootstrap/cache/config.php')),
+        ];
+
+        $this->jtbService->forgetToken();
         $token = $this->jtbService->generateTokenId();
 
         if ($token) {
             return response()->json([
                 'status' => true,
-                'token' => $token,
                 'message' => 'Token generated successfully',
+                'token' => $token,
+                'config' => $config,
             ]);
         }
 
         return response()->json([
             'status' => false,
-            'message' => 'Failed to generate token',
-        ], 500);
+            'message' => $email === '' || $password === ''
+                ? 'JRB credentials are missing from this process. Check .env, then run: php artisan config:clear'
+                : 'JRB rejected the login or could not be reached — see storage/logs/laravel.log.',
+            'config' => $config,
+        ], 503);
+    }
+
+    /** a***@example.com — enough to confirm which account, not the whole address. */
+    protected function mask(string $email): string
+    {
+        [$name, $domain] = array_pad(explode('@', $email, 2), 2, '');
+
+        return substr($name, 0, 1) . str_repeat('*', max(strlen($name) - 1, 1)) . ($domain ? '@' . $domain : '');
     }
 
     /* ---------------------------------------------------------------------
