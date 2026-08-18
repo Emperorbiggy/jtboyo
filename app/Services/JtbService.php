@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +39,41 @@ class JtbService
     /* ---------------------------------------------------------------------
      | Authorisation
      * ------------------------------------------------------------------ */
+
+    /** Cache key for the shared JRB token. */
+    protected const TOKEN_KEY = 'jrb.token';
+
+    /**
+     * The token every call needs, fetched on demand and shared across
+     * requests and users.
+     *
+     * JRB expires a login session after 60 minutes, so this is cached for 55
+     * to leave a margin. Nothing here depends on the web session: a token is
+     * obtained when it is first needed, not at login, so a JRB outage cannot
+     * lock anybody out of the app.
+     */
+    public function token(): ?string
+    {
+        $cached = Cache::get(self::TOKEN_KEY);
+
+        if ($cached) {
+            return $cached;
+        }
+
+        $token = $this->generateTokenId();
+
+        if ($token) {
+            Cache::put(self::TOKEN_KEY, $token, now()->addMinutes(55));
+        }
+
+        return $token;
+    }
+
+    /** Drop the cached token so the next call logs in again. */
+    public function forgetToken(): void
+    {
+        Cache::forget(self::TOKEN_KEY);
+    }
 
     /**
      * Login. Returns the tokenId, or null when login fails.
@@ -288,7 +324,7 @@ class JtbService
      *   ['success' => true,  'data' => mixed]
      *   ['success' => false, 'status' => int, 'message' => string, 'data' => mixed]
      */
-    protected function lookup(string $path, string $token, string $label): array
+    protected function lookup(string $path, string $token, string $label, bool $retrying = false): array
     {
         $url = $this->baseUrl . $path;
         $startedAt = microtime(true);
@@ -317,6 +353,16 @@ class JtbService
 
             if ($response->successful()) {
                 return ['success' => true, 'data' => $body];
+            }
+
+            // The 60-minute JRB session lapsed mid-use: re-login once.
+            if ($this->isExpiredToken($response->status()) && !$retrying) {
+                Log::info("JRB ↻ {$label}: token rejected, retrying with a fresh login");
+                $this->forgetToken();
+
+                if ($fresh = $this->token()) {
+                    return $this->lookup($path, $fresh, $label, true);
+                }
             }
 
             Log::warning("JRB ✗ {$label} failed", [
@@ -353,7 +399,7 @@ class JtbService
      * Non-2xx responses are returned as-is rather than swallowed: 202, 400 and
      * 404 all carry documented payloads the caller needs to act on.
      */
-    protected function post(string $path, string $token, array $payload, string $label): array
+    protected function post(string $path, string $token, array $payload, string $label, bool $retrying = false): array
     {
         $url = $this->baseUrl . $path;
         $startedAt = microtime(true);
@@ -380,6 +426,16 @@ class JtbService
                 'headers' => $this->headers($response),
                 'response' => $body ?? $response->body(),
             ]);
+
+            // The 60-minute JRB session lapsed mid-use: re-login once.
+            if ($this->isExpiredToken($response->status()) && !$retrying) {
+                Log::info("JRB ↻ {$label}: token rejected, retrying with a fresh login");
+                $this->forgetToken();
+
+                if ($fresh = $this->token()) {
+                    return $this->post($path, $fresh, $payload, $label, true);
+                }
+            }
 
             if (!$response->successful()) {
                 Log::warning("JRB ✗ {$label} returned {$response->status()}", [
@@ -409,6 +465,12 @@ class JtbService
                 ],
             ];
         }
+    }
+
+    /** JRB signals a lapsed session with 401/403. */
+    protected function isExpiredToken(int $status): bool
+    {
+        return in_array($status, [401, 403], true);
     }
 
     /** Milliseconds since $startedAt, for spotting slow JRB calls. */

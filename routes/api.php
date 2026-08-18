@@ -13,7 +13,9 @@ Route::middleware([
     AddQueuedCookiesToResponse::class,
     StartSession::class,
 ])->group(function () {
-    Route::prefix('jrb')->group(function () {
+    // Authenticated operators only — these proxy straight through to JRB with
+    // a service-held token, so they are no longer gated by a session token.
+    Route::prefix('jrb')->middleware('auth')->group(function () {
         // Reference lookups
         Route::prefix('lookups')->group(function () {
             Route::get('/organization-types', [JtbController::class, 'organizationTypes']);

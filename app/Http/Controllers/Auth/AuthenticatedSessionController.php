@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\JtbService;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
@@ -30,7 +29,7 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request, JtbService $jtbService): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse
 {
     Log::info('🔐 Entered store method of AuthenticatedSessionController');
 
@@ -46,33 +45,11 @@ class AuthenticatedSessionController extends Controller
 
     $request->session()->regenerate();
 
-    $user = auth()->user();
-    Log::info('👤 Authenticated User', ['email' => $user->email]);
+    Log::info('👤 Authenticated User', ['email' => auth()->user()->email]);
 
-    if ($user->email === 'admin@jrb.oyostate.gov.ng') {
-        Log::info('🎯 Admin matched. Attempting to fetch token...');
-
-        $token = $jtbService->generateTokenId();
-
-        if ($token) {
-            $expiresAt = now()->addSeconds(3540);
-
-            session([
-                'jtb_token' => $token,
-                'jtb_token_expires_at' => $expiresAt,
-            ]);
-
-            Log::info('✅ JTB token stored', ['expires_at' => $expiresAt->toDateTimeString()]);
-        } else {
-            Log::warning('❌ Failed to get JTB token. Logging out.');
-            auth()->logout();
-
-            return redirect()->route('login')->withErrors([
-                'email' => 'Failed to generate JTB token. Try again later.',
-            ]);
-        }
-    }
-
+    // The JRB token is no longer fetched here. JtbService obtains and caches
+    // one on demand, so signing in never depends on JRB being reachable and
+    // no single hardcoded address is privileged over other users.
     return redirect()->intended(route('dashboard', absolute: false));
 }
     /**
@@ -82,10 +59,6 @@ class AuthenticatedSessionController extends Controller
 {
     // Logout user
     Auth::guard('web')->logout();
-
-    // Explicitly forget JTB token session data
-    $request->session()->forget('jtb_token');
-    $request->session()->forget('jtb_token_expires_at');
 
     // Invalidate session and regenerate CSRF token
     $request->session()->invalidate();

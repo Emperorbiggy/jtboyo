@@ -262,14 +262,14 @@ class JtbController extends Controller
      * ------------------------------------------------------------------ */
 
     /**
-     * Run a lookup with the session token, or 401 if it is missing/expired.
+     * Run a lookup with a JRB token, or 503 if one cannot be obtained.
      */
     protected function withToken(callable $lookup): JsonResponse
     {
-        $token = $this->sessionToken();
+        $token = $this->jtbService->token();
 
         if (!$token) {
-            return $this->expired();
+            return $this->unavailable();
         }
 
         $result = $lookup($token);
@@ -285,10 +285,10 @@ class JtbController extends Controller
      */
     protected function proxy(callable $call): JsonResponse
     {
-        $token = $this->sessionToken();
+        $token = $this->jtbService->token();
 
         if (!$token) {
-            return $this->expired();
+            return $this->unavailable();
         }
 
         $result = $call($token);
@@ -296,26 +296,17 @@ class JtbController extends Controller
         return response()->json($result['body'], $result['status']);
     }
 
-    protected function sessionToken(): ?string
+    /**
+     * We could not log in to JRB at all — a credential or connectivity
+     * problem on our side, not something the operator did wrong.
+     */
+    protected function unavailable(): JsonResponse
     {
-        $token = session('jtb_token');
-        $expiresAt = session('jtb_token_expires_at');
-
-        if (!$token || !$expiresAt || now()->greaterThan($expiresAt)) {
-            return null;
-        }
-
-        return $token;
-    }
-
-    protected function expired(): JsonResponse
-    {
-        auth()->logout();
-
         return response()->json([
             'success' => false,
-            'message' => 'Session expired. Please login again.',
-        ], 401);
+            'message' => 'Could not authenticate with the JRB API. Check the JRB_* credentials '
+                . 'and that this server can reach ' . config('services.jrb.base_url') . '.',
+        ], 503);
     }
 
     /**

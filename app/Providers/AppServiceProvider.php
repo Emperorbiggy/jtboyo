@@ -28,11 +28,5 @@ class AppServiceProvider extends ServiceProvider
                 URL::forceScheme('https');
             }
         }
-
-        // Share JTB token with all Inertia responses
-        Inertia::share([
-            'jtb_token' => fn () => session('jtb_token'),
-            'jtb_token_expires_at' => fn () => session('jtb_token_expires_at'),
-        ]);
     }
 }

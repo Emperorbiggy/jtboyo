@@ -35,10 +35,6 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
-            'jtb' => [
-                'token' => Session::get('jtb_token'),
-                'expires_at' => Session::get('jtb_token_expires_at'),
-            ],
         ];
     }
 }

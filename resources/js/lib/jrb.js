@@ -14,10 +14,13 @@ const client = axios.create({
 })
 
 function handle(response) {
-  // The session token is gone — the backend has already logged us out.
-  if (response.status === 401) {
+  // Not signed in to this app (distinct from a JRB problem) — bounce to login.
+  if (response.status === 401 || response.status === 419) {
     window.location.href = '/'
-    return { status: 401, body: null }
+    return {
+      status: response.status,
+      body: { message: 'Your session has ended. Redirecting to the login page…' },
+    }
   }
 
   return { status: response.status, body: response.data }
@@ -139,9 +142,16 @@ export function interpret(status, body) {
     }
   }
 
+  const titles = {
+    401: 'Session ended',
+    419: 'Session ended',
+    404: 'Not found',
+    503: 'JRB API unavailable',
+  }
+
   return {
     tone: 'error',
-    title: status === 404 ? 'Not found' : 'Request failed',
+    title: titles[status] ?? 'Request failed',
     message: body?.message ?? `The API responded with status ${status}.`,
     details: flattenErrors(body?.error),
     data: body?.data ?? null,
