@@ -13,17 +13,38 @@ Route::middleware([
     AddQueuedCookiesToResponse::class,
     StartSession::class,
 ])->group(function () {
-    // Existing JTB routes
-    Route::post('/jtb/individuals', [JtbController::class, 'fetchIndividualTaxpayers']);
-    Route::post('/jtb/non-individuals', [JtbController::class, 'fetchNonIndividualTaxpayers']);
-    Route::post('/jtb/add-tax-record', [JtbController::class, 'submitTaxRecord']);
-    Route::post('/jtb/submit-asset', [JtbController::class, 'submitAsset']);
+    Route::prefix('jrb')->group(function () {
+        // Reference lookups
+        Route::prefix('lookups')->group(function () {
+            Route::get('/organization-types', [JtbController::class, 'organizationTypes']);
+            Route::get('/business-sectors', [JtbController::class, 'businessSectors']);
+            Route::get('/line-of-business', [JtbController::class, 'lineOfBusiness']);
+            Route::get('/line-of-business/by-sector/{sectorCode}', [JtbController::class, 'lineOfBusinessBySector']);
+            Route::get('/tax-authority/by-state/{stateCode}', [JtbController::class, 'taxAuthorityByState']);
+            Route::get('/titles', [JtbController::class, 'titles']);
+            Route::get('/genders', [JtbController::class, 'genders']);
+            Route::get('/states', [JtbController::class, 'states']);
+            Route::get('/occupations', [JtbController::class, 'occupations']);
+            Route::get('/marital-statuses', [JtbController::class, 'maritalStatuses']);
+            Route::get('/nationalities', [JtbController::class, 'nationalities']);
+            Route::get('/countries', [JtbController::class, 'countries']);
+            Route::get('/lgas/by-state/{stateCode}', [JtbController::class, 'lgasByState']);
+        });
 
-    // ✅ New Verification Routes
-    Route::post('/jtb/verify-individual-tin', [JtbController::class, 'verifyIndividualTin']);
-    Route::post('/jtb/verify-non-individual-tin', [JtbController::class, 'verifyNonIndividualTin']);
-    Route::post('/jtb/resolve-individual-nin', [JtbController::class, 'resolveIndividualNin']);
-    Route::post('/jtb/resolve-non-individual-cac', [JtbController::class, 'resolveNonIndividualCac']);
+        // Individual — lookup then complete registration
+        Route::post('/individual/lookup', [JtbController::class, 'individualLookup']);
+        Route::post('/individual/register', [JtbController::class, 'individualRegister']);
+
+        // Non-Individual — lookup then complete registration
+        Route::post('/non-individual/lookup', [JtbController::class, 'nonIndividualLookup']);
+        Route::post('/non-individual/register', [JtbController::class, 'nonIndividualRegister']);
+
+        // Resolve / verify
+        Route::post('/cooperative/resolve', [JtbController::class, 'resolveCooperative']);
+        Route::post('/mda/resolve', [JtbController::class, 'resolveMda']);
+        Route::post('/taxid/verify', [JtbController::class, 'verifyTaxId']);
+    });
+
     Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
     Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
     Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateApp']);         // ✅ Fixed

@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\JtbService;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
-use Carbon\Carbon;
-
+/**
+ * JRB State API — lookups, Tax ID lookups, registrations and resolves.
+ *
+ * Lookup actions return the service envelope. The POST actions pass JRB's own
+ * status code and body straight through, so the frontend can act on the
+ * documented codes (200 found, 202 record incomplete, 400/404, and the
+ * body-level registration codes 000/001/003/004).
+ */
 class JtbController extends Controller
 {
     protected $jtbService;
@@ -20,9 +24,9 @@ class JtbController extends Controller
     }
 
     /**
-     * Generate a fresh token from JTB (manual trigger, optional).
+     * Generate a fresh token from JRB (manual trigger, optional).
      */
-    public function getToken()
+    public function getToken(): JsonResponse
     {
         $token = $this->jtbService->generateTokenId();
 
@@ -40,303 +44,289 @@ class JtbController extends Controller
         ], 500);
     }
 
-    /**
-     * Fetch individual taxpayers from JTB using session token.
-     */
-    public function fetchIndividualTaxpayers(Request $request)
-    {
-        $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
-        $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
+    /* ---------------------------------------------------------------------
+     | Lookups
+     * ------------------------------------------------------------------ */
 
+    public function organizationTypes(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getOrganizationTypes($t));
+    }
+
+    public function businessSectors(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getBusinessSectors($t));
+    }
+
+    public function lineOfBusiness(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getLineOfBusiness($t));
+    }
+
+    public function lineOfBusinessBySector(string $sectorCode): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getLineOfBusinessBySector($t, $sectorCode));
+    }
+
+    public function taxAuthorityByState(string $stateCode): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getTaxAuthorityByState($t, $stateCode));
+    }
+
+    public function titles(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getTitles($t));
+    }
+
+    public function genders(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getGenders($t));
+    }
+
+    public function states(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getStates($t));
+    }
+
+    public function occupations(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getOccupations($t));
+    }
+
+    public function maritalStatuses(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getMaritalStatuses($t));
+    }
+
+    public function nationalities(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getNationalities($t));
+    }
+
+    public function countries(): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getCountries($t));
+    }
+
+    public function lgasByState(string $stateCode): JsonResponse
+    {
+        return $this->withToken(fn ($t) => $this->jtbService->getLgasByState($t, $stateCode));
+    }
+
+    /* ---------------------------------------------------------------------
+     | Individual
+     * ------------------------------------------------------------------ */
+
+    public function individualLookup(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nin' => 'required|string|digits:11',
+            'firstName' => 'required|string',
+            'lastName' => 'required|string',
+            'dateOfBirth' => 'required|date_format:d/m/Y',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->individualFirstLevelLookup($t, $data));
+    }
+
+    public function individualRegister(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'nin' => 'required|string|digits:11',
+            'bvn' => 'nullable|string',
+            'titleId' => 'required|integer|min:1',
+            'firstName' => 'required|string',
+            'middleName' => 'nullable|string',
+            'lastName' => 'required|string',
+            'genderId' => 'required|integer|min:1',
+            'stateOfOriginCode' => 'required|string',
+            'dateOfBirth' => 'required|date_format:d/m/Y',
+            'occupationId' => 'required|integer|min:1',
+            'maritalStatusId' => 'required|integer|min:1',
+            'phoneNumber1' => 'required|string',
+            'phoneNumber2' => 'nullable|string',
+            'email' => 'nullable|email',
+            'maidenName' => 'nullable|string',
+            'nextOfKin' => 'nullable|string',
+            'nationalityCode' => 'required|string',
+            'isResident' => 'required|boolean',
+            'isExporter' => 'required|boolean',
+            'isImporter' => 'required|boolean',
+            'countryCode' => 'required|string',
+            'stateOfResidenceCode' => 'required|string',
+            'lgaCode' => 'required|string',
+            'city' => 'required|string',
+            'street' => 'required|string',
+            'houseNumber' => 'required|string',
+            'taxpayerPhoto' => 'nullable|string',
+        ]);
+
+        $data = $this->castBooleans($data, ['isResident', 'isExporter', 'isImporter']);
+
+        return $this->proxy(fn ($t) => $this->jtbService->individualCompleteRegistration($t, $data));
+    }
+
+    /* ---------------------------------------------------------------------
+     | Non-Individual
+     * ------------------------------------------------------------------ */
+
+    public function nonIndividualLookup(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'cacRegNo' => 'required|string',
+            'organizationTypeId' => 'required|integer|min:1',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->nonIndividualFirstLevelLookup($t, $data));
+    }
+
+    public function nonIndividualRegister(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'organizationTypeId' => 'required|integer|min:1',
+            'registrationNumber' => 'required|string',
+            'phoneNumber1' => 'required|string',
+            'phoneNumber2' => 'nullable|string',
+            'emailAddress' => 'nullable|email',
+            'lineOfBusinessCode' => 'required|string',
+            'commencementDate' => 'required|date_format:d/m/Y',
+            'dateOfIncorporation' => 'required|date_format:d/m/Y',
+            'isExporter' => 'required|boolean',
+            'isImporter' => 'required|boolean',
+            'isLandlord' => 'required|boolean',
+            'countryCode' => 'required|string',
+            'stateCode' => 'required|string',
+            'lgaCode' => 'required|string',
+            'city' => 'required|string',
+            'streetName' => 'required|string',
+            'houseNumber' => 'required|string',
+            'poBox' => 'nullable|string',
+            'postalCode' => 'nullable|string',
+            // dd/MM only — a regex, not date_format:d/m, so that 29/02 does not
+            // depend on whether the current year happens to be a leap year.
+            'fiscalYearStart' => ['required', 'regex:/^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])$/'],
+            'fiscalYearEnd' => ['required', 'regex:/^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])$/'],
+            'shareCapital' => 'required|numeric',
+            'directors' => 'required|array|min:1',
+            'directors.*.directorTaxId' => 'nullable|string',
+            // JRB rejects the literal placeholder "string" as a director name.
+            'directors.*.name' => 'required|string|not_in:string',
+            'directors.*.phone' => 'nullable|string',
+            'directors.*.email' => 'nullable|email',
+            'directors.*.address' => 'nullable|string',
+            'directors.*.shares' => 'nullable|string',
+        ]);
+
+        $data = $this->castBooleans($data, ['isExporter', 'isImporter', 'isLandlord']);
+        $data['shareCapital'] = (float) $data['shareCapital'];
+
+        return $this->proxy(fn ($t) => $this->jtbService->nonIndividualCompleteRegistration($t, $data));
+    }
+
+    /* ---------------------------------------------------------------------
+     | Resolve / verify
+     * ------------------------------------------------------------------ */
+
+    public function resolveCooperative(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'regNo' => 'required|string',
+            'stateCode' => 'required|string',
+            'dateOfIncorporation' => 'required|date_format:d/m/Y',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->resolveCooperative($t, $data));
+    }
+
+    public function resolveMda(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'source' => 'required|string|in:mda,fed_mda',
+            'Org_No' => 'required|string',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->resolveMda($t, $data));
+    }
+
+    public function verifyTaxId(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'taxId' => 'required|string',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->verifyTaxId($t, $data['taxId']));
+    }
+
+    /* ---------------------------------------------------------------------
+     | Helpers
+     * ------------------------------------------------------------------ */
+
+    /**
+     * Run a lookup with the session token, or 401 if it is missing/expired.
+     */
+    protected function withToken(callable $lookup): JsonResponse
+    {
+        $token = $this->sessionToken();
+
+        if (!$token) {
+            return $this->expired();
+        }
+
+        $result = $lookup($token);
+
+        return response()->json(
+            $result,
+            $result['success'] ? 200 : ($result['status'] ?? 502)
+        );
+    }
+
+    /**
+     * Run a JRB POST and pass its status and body through untouched.
+     */
+    protected function proxy(callable $call): JsonResponse
+    {
+        $token = $this->sessionToken();
+
+        if (!$token) {
+            return $this->expired();
+        }
+
+        $result = $call($token);
+
+        return response()->json($result['body'], $result['status']);
+    }
+
+    protected function sessionToken(): ?string
+    {
         $token = session('jtb_token');
         $expiresAt = session('jtb_token_expires_at');
 
-        Log::info('JTB Token from session:', ['token' => $token, 'expires_at' => $expiresAt]);
-
-        if (!$token || now()->greaterThan($expiresAt)) {
-            auth()->logout();
-            return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
+        if (!$token || !$expiresAt || now()->greaterThan($expiresAt)) {
+            return null;
         }
 
-        $data = $this->jtbService->getIndividualTaxpayers($token, $fromDate, $toDate);
-        return response()->json($data);
+        return $token;
     }
 
-    /**
-     * Fetch non-individual taxpayers from JTB.
-     */
-    public function fetchNonIndividualTaxpayers(Request $request)
+    protected function expired(): JsonResponse
     {
-        $fromDate = Carbon::parse($request->input('fromDate'))->format('d-m-Y');
-        $toDate = Carbon::parse($request->input('toDate'))->format('d-m-Y');
+        auth()->logout();
 
-        $token = session('jtb_token');
-        $expiresAt = session('jtb_token_expires_at');
-
-        Log::info('JTB Token from session (Non-Individual):', ['token' => $token, 'expires_at' => $expiresAt]);
-
-        if (!$token || now()->greaterThan($expiresAt)) {
-            auth()->logout();
-            return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-        }
-
-        $data = $this->jtbService->getNonIndividualTaxpayers($token, $fromDate, $toDate);
-        return response()->json($data);
+        return response()->json([
+            'success' => false,
+            'message' => 'Session expired. Please login again.',
+        ], 401);
     }
 
     /**
-     * Submit a tax record to JTB.
+     * JRB expects real JSON booleans; form posts arrive as "1"/"true".
      */
-    public function submitTaxRecord(Request $request)
-{
-    // Manually map old keys to expected ones
-    $input = $request->all();
-
-    $mapped = [
-        'jtb_tin' => $input['jtb_tin'] ?? null,
-        'tcc_number' => $input['tcc_number'] ?? null,
-        'tax_period' => $input['tax_period'] ?? null,
-        'turnover' => $input['turnover'] ?? null,
-        'assessable_profit' => $input['assessable_profit'] ?? null,
-        'total_profit' => $input['total_profit'] ?? null,
-        'tax_payable' => $input['tax_payable'] ?? null,
-        'tax_paid' => $input['tax_paid'] ?? null,
-        'tax_type' => $input['tax_type'] ?? null,
-        'tax_authority' => $input['tax_authority'] ?? null,
-        'tax_office' => $input['tax_office'] ?? null,
-        'employer_name' => $input['EmployerName'] ?? $input['employer_name'] ?? null,
-        'taxpayer_address' => $input['TaxPayerAddress'] ?? $input['taxpayer_address'] ?? null,
-        'taxpayer_name' => $input['TaxPayerName'] ?? $input['taxpayer_name'] ?? null,
-        'source_of_income' => $input['Sourceofincome'] ?? $input['source_of_income'] ?? null,
-        'payment_date' => $input['payment_date'] ?? null,
-        'tcc_expiry_date' => $input['expirydate'] ?? $input['tcc_expiry_date'] ?? null,
-    ];
-
-    $validated = Validator::make($mapped, [
-        'jtb_tin' => 'required|string',
-        'tcc_number' => 'required|string',
-        'tax_period' => 'required|string',
-        'turnover' => 'required|numeric',
-        'assessable_profit' => 'required|numeric',
-        'total_profit' => 'required|numeric',
-        'tax_payable' => 'required|numeric',
-        'tax_paid' => 'required|numeric',
-        'tax_type' => 'required|string',
-        'tax_authority' => 'required|string',
-        'employer_name' => 'required|string',
-        'taxpayer_address' => 'required|string',
-        'taxpayer_name' => 'required|string',
-        'source_of_income' => 'required|string',
-        'payment_date' => 'required|date',
-        'tcc_expiry_date' => 'required|date',
-    ]);
-
-    if ($validated->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed.',
-            'errors' => $validated->errors(),
-        ], 422);
-    }
-
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    }
-
-    $response = $this->jtbService->addTaxRecord($validated->validated(), $token);
-
-    return response()->json($response);
-}
-public function submitAsset(Request $request)
-{
-    $input = $request->all();
-
-    // ✅ Convert date to expected d/m/Y format if provided
-    if (!empty($input['date_acquired'])) {
-        try {
-            $input['date_acquired'] = \Carbon\Carbon::parse($input['date_acquired'])->format('d/m/Y');
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid date format.',
-                'errors' => ['date_acquired' => ['Invalid date format.']],
-            ], 422);
+    protected function castBooleans(array $data, array $keys): array
+    {
+        foreach ($keys as $key) {
+            $data[$key] = filter_var($data[$key], FILTER_VALIDATE_BOOLEAN);
         }
+
+        return $data;
     }
-
-    // ✅ Now validate with expected format
-    $validator = Validator::make($input, [
-        'tin' => 'required|string',
-        'location' => 'required|string',
-        'asset_type' => 'required|string',
-        'asset_value' => 'required|numeric',
-        'date_acquired' => 'required|date_format:d/m/Y',
-        'description' => 'nullable|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    // ✅ Check token
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please log in again.'], 401);
-    }
-
-    // ✅ Proceed with validated payload
-    $payload = $validator->validated();
-
-    $response = $this->jtbService->addAssetDetails($payload, $token);
-
-    return response()->json($response);
-}
-
-public function verifyIndividualTin(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'tin' => 'required|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    }
-
-    $tin = $request->input('tin');
-    $response = $this->jtbService->verifyIndividualTin($tin, $token);
-
-    return response()->json($response);
-}
-
-/**
- * Verify Non-Individual TIN using JTB new endpoint.
- */
-public function verifyNonIndividualTin(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'tin' => 'required|string',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    }
-
-    $tin = $request->input('tin');
-
-    
-    $response = $this->jtbService->verifyNonIndividualTin($token, $tin);
-
-    return response()->json($response);
-}
-
-/**
- * Resolve Individual NIN for TaxID retrieval and verification.
- */
-public function resolveIndividualNin(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'nin' => 'required|string',
-        'firstName' => 'required|string',
-        'lastName' => 'required|string',
-        'dateOfBirth' => 'required|date',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    }
-
-    $data = $validator->validated();
-
-    $response = $this->jtbService->resolveIndividualNin(
-        $token,
-        $data['nin'],
-        $data['firstName'],
-        $data['lastName'],
-        $data['dateOfBirth']
-    );
-
-    return response()->json($response);
-}
-
-/**
- * Resolve Non-Individual CAC registration number for TaxID retrieval and verification.
- */
-public function resolveNonIndividualCac(Request $request)
-{
-    $validator = Validator::make($request->all(), [
-        'cacRegNo' => 'required|string',
-        'type' => 'required|string|in:1,2,3,4,5',
-    ]);
-
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
-    }
-
-    $token = session('jtb_token');
-    $expiresAt = session('jtb_token_expires_at');
-
-    if (!$token || now()->greaterThan($expiresAt)) {
-        auth()->logout();
-        return response()->json(['success' => false, 'message' => 'Session expired. Please login again.'], 401);
-    }
-
-    $data = $validator->validated();
-
-    $response = $this->jtbService->resolveNonIndividualCac($token, $data['cacRegNo'], $data['type']);
-
-    return response()->json($response);
-}
-
-
 }

@@ -28,12 +28,17 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'jtb' => [
-    'base_url' => env('JTB_BASE_URL'),
-    'new_base_url' => env('JTB_BASE_URL_NEW'),
-    'email' => env('JTB_EMAIL'),
-    'password' => env('JTB_PASSWORD'),
-    'client_name' => env('JTB_CLIENT_NAME'),
+    /*
+    | Joint Revenue Board (JRB) State API.
+    |
+    | base_url is the host root only — login lives under /api/v1 and the
+    | lookups under /api, so the paths are built in JtbService.
+    */
+    'jrb' => [
+        'base_url' => env('JRB_BASE_URL', 'https://api.jrb.gov.ng:8311'),
+        'email' => env('JRB_EMAIL'),
+        'password' => env('JRB_PASSWORD'),
+        'client_name' => env('JRB_CLIENT_NAME', 'jrb'),
     ],
 
 

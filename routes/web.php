@@ -23,40 +23,23 @@ Route::get('/', function () {
     return Inertia::render('Auth/Login');
 })->name('login');
 
-Route::get('/individual', function () {
-    return Inertia::render('IndividualTaxPayer');
-});
-
-Route::get('/verify', function () {
-    return Inertia::render('VerifyTin');
-});
-
-Route::get('/resolve-nin', function () {
-    return Inertia::render('ResolveNin');
-});
-
-Route::get('/resolve-cac', function () {
-    return Inertia::render('ResolveCac');
-});
-
-Route::get('/non-individual', function () {
-    return Inertia::render('NonIndividualTaxPayers');
+// JRB State API console
+Route::prefix('jrb')->group(function () {
+    Route::inertia('/individual/lookup', 'Jrb/IndividualLookup');
+    Route::inertia('/individual/register', 'Jrb/IndividualRegister');
+    Route::inertia('/non-individual/lookup', 'Jrb/NonIndividualLookup');
+    Route::inertia('/non-individual/register', 'Jrb/NonIndividualRegister');
+    Route::inertia('/cooperative', 'Jrb/Cooperative');
+    Route::inertia('/mdas', 'Jrb/Mdas');
+    Route::inertia('/taxid-verification', 'Jrb/TaxIdVerification');
+    Route::inertia('/lookups', 'Jrb/Lookups');
 });
 
 Route::get('/create-app', function () {
     return Inertia::render('AuthApps');
 });
 
-Route::get('/add-tax-record', function () {
-    return Inertia::render('AddRecord');
-});
-
-
-
-Route::get('/add-asset', function () {
-    return Inertia::render('AddAssets');
-});
-Route::get('/jtb/token', [JtbController::class, 'getToken']);
+Route::get('/jrb/token', [JtbController::class, 'getToken']);
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
 
 
