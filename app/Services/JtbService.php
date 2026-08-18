@@ -365,8 +365,27 @@ class JtbService
                 'response' => $body ?? $response->body(),
             ]);
 
-            if ($response->successful()) {
+            // A lookup answers with a JSON array. Anything else on a 200 — most
+            // often JRB's own {success:false,...} error envelope — is a failure
+            // dressed as success, and must not reach the UI as a result.
+            if ($response->successful() && !$this->bodyReportsFailure($body)) {
                 return ['success' => true, 'data' => $body];
+            }
+
+            if ($response->successful()) {
+                Log::warning("JRB ✗ {$label} failed in body (HTTP 200)", [
+                    'url' => $url,
+                    'body_status' => $body['status'] ?? null,
+                    'body_message' => $body['message'] ?? null,
+                    'response' => $body,
+                ]);
+
+                return [
+                    'success' => false,
+                    'status' => is_int($body['status'] ?? null) ? $body['status'] : 502,
+                    'message' => $body['message'] ?? "JRB reported a failure fetching {$label}.",
+                    'data' => $body,
+                ];
             }
 
             // The 60-minute JRB session lapsed mid-use: re-login once.
@@ -451,12 +470,7 @@ class JtbService
                 }
             }
 
-            // JRB sometimes answers 200 while reporting a failure in the body,
-            // so a warning has to consider both.
-            $bodyFailed = is_array($body)
-                && (($body['success'] ?? null) === false || (is_int($body['status'] ?? null) && $body['status'] >= 400));
-
-            if (!$response->successful() || $bodyFailed) {
+            if (!$response->successful() || $this->bodyReportsFailure($body)) {
                 Log::warning("JRB ✗ {$label} failed (HTTP {$response->status()})", [
                     'url' => $url,
                     'body_status' => $body['status'] ?? null,
@@ -486,6 +500,20 @@ class JtbService
                 ],
             ];
         }
+    }
+
+    /**
+     * JRB can answer HTTP 200 while reporting a failure in the body, so the
+     * HTTP status alone is not enough to call a response successful.
+     */
+    protected function bodyReportsFailure($body): bool
+    {
+        if (!is_array($body)) {
+            return false;
+        }
+
+        return ($body['success'] ?? null) === false
+            || (is_int($body['status'] ?? null) && $body['status'] >= 400);
     }
 
     /** JRB signals a lapsed session with 401/403. */
