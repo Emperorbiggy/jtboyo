@@ -127,14 +127,24 @@ export function interpret(status, body) {
 
   if (body?.success === false || (bodyStatus !== null && bodyStatus >= 400)) {
     const titles = { 404: 'Not found', 500: 'JRB internal error', 502: 'JRB upstream error', 503: 'JRB unavailable' }
+    const details = flattenErrors(body.error ?? body.errors)
+
+    if (bodyStatus !== null && bodyStatus >= 500) {
+      details.push(
+        'This is a fault inside the JRB API, not a problem with the details you entered — ' +
+          'their service could not read the response from its own identity provider. ' +
+          'Retry shortly; if it keeps happening, report it to JRB with the time shown above.'
+      )
+    }
 
     return {
       tone: 'error',
       title: titles[bodyStatus] ?? (bodyStatus >= 500 ? 'JRB internal error' : 'Request failed'),
       message: body.message ?? 'The JRB API reported a failure.',
-      details: flattenErrors(body.error ?? body.errors),
+      details,
       data: body.data ?? null,
       code: bodyStatus !== null ? String(bodyStatus) : undefined,
+      at: new Date().toLocaleString(),
     }
   }
 

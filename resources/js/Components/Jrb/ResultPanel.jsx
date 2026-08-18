@@ -103,6 +103,8 @@ export default function ResultPanel({ result, raw, continueTo }) {
 
           {result.message && <p className="mt-1 text-sm text-gray-700">{result.message}</p>}
 
+          {result.at && <p className="mt-1 text-xs text-gray-500">Received {result.at}</p>}
+
           {result.details?.length > 0 && (
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-gray-700">
               {result.details.map((detail, index) => (
