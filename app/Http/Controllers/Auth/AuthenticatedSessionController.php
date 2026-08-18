@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\JtbService;
 use Illuminate\Validation\ValidationException;
 
 class AuthenticatedSessionController extends Controller
