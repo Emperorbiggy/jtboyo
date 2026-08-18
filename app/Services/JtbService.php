@@ -341,12 +341,12 @@ class JtbService
     protected function lookup(string $path, string $token, string $label, bool $retrying = false): array
     {
         $url = $this->baseUrl . $path;
+        $fullUrl = $url . '?authtoken=' . urlencode($token);
         $startedAt = microtime(true);
 
         Log::info("JRB → {$label} request", [
-            'url' => $url,
             'method' => 'GET',
-            'query' => ['authtoken' => $token],
+            'url' => $fullUrl,
         ]);
 
         try {
@@ -435,20 +435,27 @@ class JtbService
     protected function post(string $path, string $token, array $payload, string $label, bool $retrying = false): array
     {
         $url = $this->baseUrl . $path;
+        $fullUrl = $url . '?authtoken=' . urlencode($token);
         $startedAt = microtime(true);
 
         Log::info("JRB → {$label} request", [
-            'url' => $url,
             'method' => 'POST',
-            'query' => ['authtoken' => $token],
+            'url' => $fullUrl,
+            'content_type' => 'application/json',
             'request' => $payload,
         ]);
 
         try {
+            // Encoded by hand so dates go out as "10/04/1999" rather than PHP's
+            // default "10\/04\/1999". Both are valid JSON, but this makes our
+            // bytes identical to a hand-written Postman request.
             $response = Http::timeout(60)
                 ->acceptJson()
-                ->asJson()
-                ->post($url . '?authtoken=' . urlencode($token), $payload);
+                ->withBody(
+                    json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                    'application/json'
+                )
+                ->post($fullUrl);
 
             $body = $response->json();
 
