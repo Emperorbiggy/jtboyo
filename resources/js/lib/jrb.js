@@ -121,6 +121,23 @@ export function interpret(status, body) {
     return { tone: 'success', title: 'Successful', message: body.message ?? '', details: [], data: body }
   }
 
+  // JRB can answer HTTP 200 while reporting a failure in the body — an
+  // upstream error inside their service, for example. Trust the body.
+  const bodyStatus = typeof body?.status === 'number' ? body.status : null
+
+  if (body?.success === false || (bodyStatus !== null && bodyStatus >= 400)) {
+    const titles = { 404: 'Not found', 500: 'JRB internal error', 502: 'JRB upstream error', 503: 'JRB unavailable' }
+
+    return {
+      tone: 'error',
+      title: titles[bodyStatus] ?? (bodyStatus >= 500 ? 'JRB internal error' : 'Request failed'),
+      message: body.message ?? 'The JRB API reported a failure.',
+      details: flattenErrors(body.error ?? body.errors),
+      data: body.data ?? null,
+      code: bodyStatus !== null ? String(bodyStatus) : undefined,
+    }
+  }
+
   if (status === 202) {
     return {
       tone: 'warning',

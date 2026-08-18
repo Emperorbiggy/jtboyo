@@ -451,9 +451,16 @@ class JtbService
                 }
             }
 
-            if (!$response->successful()) {
-                Log::warning("JRB ✗ {$label} returned {$response->status()}", [
+            // JRB sometimes answers 200 while reporting a failure in the body,
+            // so a warning has to consider both.
+            $bodyFailed = is_array($body)
+                && (($body['success'] ?? null) === false || (is_int($body['status'] ?? null) && $body['status'] >= 400));
+
+            if (!$response->successful() || $bodyFailed) {
+                Log::warning("JRB ✗ {$label} failed (HTTP {$response->status()})", [
                     'url' => $url,
+                    'body_status' => $body['status'] ?? null,
+                    'body_message' => $body['message'] ?? null,
                     'request' => $payload,
                     'response' => $body ?? $response->body(),
                 ]);
@@ -487,10 +494,13 @@ class JtbService
         return in_array($status, [401, 403], true);
     }
 
-    /** Milliseconds since $startedAt, for spotting slow JRB calls. */
-    protected function elapsed(float $startedAt): float
+    /**
+     * Milliseconds since $startedAt, for spotting slow JRB calls. Returned as
+     * a string so the log shows "4118.3" rather than a full float expansion.
+     */
+    protected function elapsed(float $startedAt): string
     {
-        return round((microtime(true) - $startedAt) * 1000, 1);
+        return number_format((microtime(true) - $startedAt) * 1000, 1, '.', '');
     }
 
     /** Response headers worth keeping; the full set is mostly noise. */
