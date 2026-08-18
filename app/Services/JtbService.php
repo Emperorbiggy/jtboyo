@@ -46,22 +46,33 @@ class JtbService
     {
         $url = $this->baseUrl . '/api/v1/Account/login';
 
+        $payload = [
+            'email' => $this->email,
+            'password' => $this->password,
+            'clientname' => $this->clientName,
+        ];
+
+        $startedAt = microtime(true);
+
+        Log::info('JRB → Login request', [
+            'url' => $url,
+            'method' => 'POST',
+            // The password is a static credential from .env, not diagnostic
+            // data — everything else is logged verbatim.
+            'request' => array_merge($payload, ['password' => '[redacted]']),
+        ]);
+
         try {
-            $response = Http::timeout(15)
-                ->acceptJson()
-                ->post($url, [
-                    'email' => $this->email,
-                    'password' => $this->password,
-                    'clientname' => $this->clientName,
-                ]);
+            $response = Http::timeout(15)->acceptJson()->post($url, $payload);
 
             $data = $response->json();
 
-            Log::info('JRB login response', [
+            Log::info('JRB ← Login response', [
                 'url' => $url,
                 'status' => $response->status(),
-                'success' => $data['success'] ?? null,
-                'errorMsg' => $data['errorMsg'] ?? null,
+                'duration_ms' => $this->elapsed($startedAt),
+                'headers' => $this->headers($response),
+                'response' => $data ?? $response->body(),
             ]);
 
             // The API returns success as the string "true".
@@ -71,12 +82,18 @@ class JtbService
                 return $data['tokenId'];
             }
 
-            Log::error('Failed to get a valid token from JRB', [
+            Log::error('JRB ✗ Login failed', [
+                'url' => $url,
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'errorMsg' => $data['errorMsg'] ?? null,
+                'response' => $data ?? $response->body(),
             ]);
         } catch (\Exception $e) {
-            Log::error('JRB token generation exception: ' . $e->getMessage());
+            Log::error('JRB ✗ Login exception', [
+                'url' => $url,
+                'duration_ms' => $this->elapsed($startedAt),
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         return null;
@@ -274,35 +291,52 @@ class JtbService
     protected function lookup(string $path, string $token, string $label): array
     {
         $url = $this->baseUrl . $path;
+        $startedAt = microtime(true);
+
+        Log::info("JRB → {$label} request", [
+            'url' => $url,
+            'method' => 'GET',
+            'query' => ['authtoken' => $token],
+        ]);
 
         try {
             $response = Http::timeout(30)
                 ->acceptJson()
                 ->get($url, ['authtoken' => $token]);
 
-            Log::info("JRB lookup: {$label}", [
+            $body = $response->json();
+
+            Log::info("JRB ← {$label} response", [
                 'url' => $url,
                 'status' => $response->status(),
+                'duration_ms' => $this->elapsed($startedAt),
+                'headers' => $this->headers($response),
+                'count' => is_array($body) ? count($body) : null,
+                'response' => $body ?? $response->body(),
             ]);
 
             if ($response->successful()) {
-                return ['success' => true, 'data' => $response->json()];
+                return ['success' => true, 'data' => $body];
             }
 
-            Log::warning("JRB lookup failed: {$label}", [
+            Log::warning("JRB ✗ {$label} failed", [
                 'url' => $url,
                 'status' => $response->status(),
-                'body' => $response->body(),
+                'response' => $body ?? $response->body(),
             ]);
 
             return [
                 'success' => false,
                 'status' => $response->status(),
                 'message' => "Failed to fetch {$label}.",
-                'data' => $response->json(),
+                'data' => $body,
             ];
         } catch (\Exception $e) {
-            Log::error("JRB lookup exception: {$label}", ['message' => $e->getMessage()]);
+            Log::error("JRB ✗ {$label} exception", [
+                'url' => $url,
+                'duration_ms' => $this->elapsed($startedAt),
+                'exception' => $e->getMessage(),
+            ]);
 
             return [
                 'success' => false,
@@ -322,6 +356,14 @@ class JtbService
     protected function post(string $path, string $token, array $payload, string $label): array
     {
         $url = $this->baseUrl . $path;
+        $startedAt = microtime(true);
+
+        Log::info("JRB → {$label} request", [
+            'url' => $url,
+            'method' => 'POST',
+            'query' => ['authtoken' => $token],
+            'request' => $payload,
+        ]);
 
         try {
             $response = Http::timeout(60)
@@ -329,17 +371,35 @@ class JtbService
                 ->asJson()
                 ->post($url . '?authtoken=' . urlencode($token), $payload);
 
-            Log::info("JRB request: {$label}", [
+            $body = $response->json();
+
+            Log::info("JRB ← {$label} response", [
                 'url' => $url,
                 'status' => $response->status(),
+                'duration_ms' => $this->elapsed($startedAt),
+                'headers' => $this->headers($response),
+                'response' => $body ?? $response->body(),
             ]);
+
+            if (!$response->successful()) {
+                Log::warning("JRB ✗ {$label} returned {$response->status()}", [
+                    'url' => $url,
+                    'request' => $payload,
+                    'response' => $body ?? $response->body(),
+                ]);
+            }
 
             return [
                 'status' => $response->status(),
-                'body' => $response->json() ?? ['raw' => $response->body()],
+                'body' => $body ?? ['raw' => $response->body()],
             ];
         } catch (\Exception $e) {
-            Log::error("JRB request exception: {$label}", ['message' => $e->getMessage()]);
+            Log::error("JRB ✗ {$label} exception", [
+                'url' => $url,
+                'duration_ms' => $this->elapsed($startedAt),
+                'request' => $payload,
+                'exception' => $e->getMessage(),
+            ]);
 
             return [
                 'status' => 502,
@@ -349,5 +409,22 @@ class JtbService
                 ],
             ];
         }
+    }
+
+    /** Milliseconds since $startedAt, for spotting slow JRB calls. */
+    protected function elapsed(float $startedAt): float
+    {
+        return round((microtime(true) - $startedAt) * 1000, 1);
+    }
+
+    /** Response headers worth keeping; the full set is mostly noise. */
+    protected function headers($response): array
+    {
+        return array_intersect_key($response->headers(), array_flip([
+            'Content-Type',
+            'Content-Length',
+            'Date',
+            'Server',
+        ]));
     }
 }
