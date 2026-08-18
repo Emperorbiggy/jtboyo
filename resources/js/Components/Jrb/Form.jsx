@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 
 const inputClass =
   'w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm ' +
@@ -41,22 +41,41 @@ export function Field({ name, label, value, onChange, required, hint, type = 'te
 }
 
 export function Select({ name, label, value, onChange, options, required, hint, loading, placeholder = 'Select…' }) {
+  // JRB lookup values are not unique — organisation types reuse one id across
+  // several names (id 1 is BUSINESS NAME, PARTNERSHIP and SOLE PROPRIETORSHIP).
+  // The <select> is therefore keyed by position and mapped back to the real
+  // value on change, so the operator's actual choice stays on screen instead
+  // of snapping to the first entry sharing that id.
+  const [index, setIndex] = useState('')
+
+  useEffect(() => {
+    if (value === '' || value === undefined || value === null) {
+      setIndex('')
+      return
+    }
+
+    // Keep the chosen row if it still carries the current value.
+    if (index !== '' && String(options[index]?.value) === String(value)) return
+
+    const found = options.findIndex((option) => String(option.value) === String(value))
+    setIndex(found >= 0 ? String(found) : '')
+  }, [value, options])
+
+  const handleChange = (e) => {
+    const position = e.target.value
+    setIndex(position)
+    onChange(name, position === '' ? '' : options[Number(position)].value)
+  }
+
   return (
     <div>
       <Label htmlFor={name} required={required}>
         {label}
       </Label>
-      <select
-        id={name}
-        name={name}
-        value={value ?? ''}
-        onChange={(e) => onChange(name, e.target.value)}
-        disabled={loading}
-        className={inputClass}
-      >
+      <select id={name} name={name} value={index} onChange={handleChange} disabled={loading} className={inputClass}>
         <option value="">{loading ? 'Loading…' : placeholder}</option>
-        {options.map((option) => (
-          <option key={String(option.value)} value={option.value}>
+        {options.map((option, position) => (
+          <option key={`${option.value}-${position}`} value={position}>
             {option.label}
           </option>
         ))}

@@ -227,7 +227,8 @@ export function toOptions(items, { valueKey, labelKey, prefer = 'id' } = {}) {
       const value = vKey ? item[vKey] : Object.values(item)[0]
       const label = lKey ? item[lKey] : String(value)
 
-      return { value, label: String(label), raw: item }
+      // Live data carries stray double spaces, e.g. "LIMITED  PARTNERSHIP".
+      return { value, label: String(label).replace(/\s+/g, ' ').trim(), raw: item }
     })
     .filter((option) => option.value !== undefined && option.value !== null)
 }
