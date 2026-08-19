@@ -173,14 +173,21 @@ export function interpret(status, body) {
     401: 'Session ended',
     419: 'Session ended',
     404: 'Not found',
+    502: 'JRB API unreachable',
     503: 'JRB API unavailable',
+    504: 'JRB API timed out',
   }
+
+  const details = flattenErrors(body?.error)
+
+  // The underlying transport reason, e.g. the cURL message behind a timeout.
+  if (body?.reason) details.push(body.reason)
 
   return {
     tone: 'error',
     title: titles[status] ?? 'Request failed',
     message: body?.message ?? `The API responded with status ${status}.`,
-    details: flattenErrors(body?.error),
+    details,
     data: body?.data ?? null,
   }
 }

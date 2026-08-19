@@ -5,6 +5,7 @@ import PageHeader from '@/Components/Jrb/PageHeader'
 import ResultPanel from '@/Components/Jrb/ResultPanel'
 import LookupSelect from '@/Components/Jrb/LookupSelect'
 import PhotoField from '@/Components/Jrb/PhotoField'
+import RegistrationSuccess from '@/Components/Jrb/RegistrationSuccess'
 import { Field, DateField, BoolField, Section, SubmitButton } from '@/Components/Jrb/Form'
 import { postJrb, interpret } from '@/lib/jrb'
 
@@ -76,6 +77,26 @@ export default function IndividualRegister() {
     const { status, body } = await postJrb('/individual/register', payload)
     setResult(interpret(status, body))
     setLoading(false)
+  }
+
+  // Registration completed (000) — the Tax ID takes over the page.
+  if (result?.code === '000') {
+    return (
+      <>
+        <Head title="Registration Completed" />
+        <DashboardLayout>
+          <RegistrationSuccess
+            result={result}
+            title="Registration completed"
+            onRegisterAnother={() => {
+              setForm(EMPTY)
+              setResult(null)
+              window.history.replaceState({}, '', '/jrb/individual/register')
+            }}
+          />
+        </DashboardLayout>
+      </>
+    )
   }
 
   return (

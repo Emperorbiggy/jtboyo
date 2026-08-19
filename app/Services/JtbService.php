@@ -350,7 +350,7 @@ class JtbService
         ]);
 
         try {
-            $response = Http::timeout(30)
+            $response = Http::timeout(60)
                 ->acceptJson()
                 ->get($url, ['authtoken' => $token]);
 
@@ -413,10 +413,14 @@ class JtbService
             return [
                 'success' => false,
                 'status' => $response->status(),
-                'message' => "Failed to fetch {$label}.",
+                'message' => is_array($body) && !empty($body['message'])
+                    ? $body['message']
+                    : "JRB returned HTTP {$response->status()} for {$label}.",
                 'data' => $body,
             ];
         } catch (\Exception $e) {
+            $failure = $this->describeTransportFailure($e, $label);
+
             Log::error("JRB ✗ {$label} exception", [
                 'url' => $url,
                 'duration_ms' => $this->elapsed($startedAt),
@@ -425,8 +429,9 @@ class JtbService
 
             return [
                 'success' => false,
-                'status' => 502,
-                'message' => "Could not reach the JRB API for {$label}.",
+                'status' => $failure['status'],
+                'message' => $failure['message'],
+                'reason' => $failure['reason'],
                 'data' => null,
             ];
         }
@@ -511,11 +516,14 @@ class JtbService
                 'exception' => $e->getMessage(),
             ]);
 
+            $failure = $this->describeTransportFailure($e, $label);
+
             return [
-                'status' => 502,
+                'status' => $failure['status'],
                 'body' => [
                     'success' => false,
-                    'message' => "Could not reach the JRB API for {$label}.",
+                    'message' => $failure['message'],
+                    'reason' => $failure['reason'],
                 ],
             ];
         }
@@ -533,6 +541,30 @@ class JtbService
 
         return ($body['success'] ?? null) === false
             || (is_int($body['status'] ?? null) && $body['status'] >= 400);
+    }
+
+    /**
+     * Turn a transport exception into a status and a message worth showing.
+     *
+     * A timeout and a refused connection both used to surface as a bare 502
+     * reading "could not reach", which is not actionable — one means JRB is
+     * slow, the other that it is unreachable.
+     */
+    protected function describeTransportFailure(\Exception $e, string $label): array
+    {
+        $reason = $e->getMessage();
+
+        $timedOut = str_contains($reason, 'cURL error 28')
+            || stripos($reason, 'Timeout was reached') !== false
+            || stripos($reason, 'timed out') !== false;
+
+        return [
+            'status' => $timedOut ? 504 : 502,
+            'message' => $timedOut
+                ? "The JRB API did not respond in time while fetching {$label}."
+                : "Could not reach the JRB API for {$label}.",
+            'reason' => $reason,
+        ];
     }
 
     /**

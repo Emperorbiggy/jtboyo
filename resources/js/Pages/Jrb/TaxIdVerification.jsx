@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Head } from '@inertiajs/react'
 import DashboardLayout from '@/Layouts/DashboardLayout'
 import PageHeader from '@/Components/Jrb/PageHeader'
@@ -10,6 +10,12 @@ export default function TaxIdVerification() {
   const [taxId, setTaxId] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+
+  // Pre-fill when arriving from a completed registration.
+  useEffect(() => {
+    const carried = new URLSearchParams(window.location.search).get('taxId')
+    if (carried) setTaxId(carried)
+  }, [])
 
   const submit = async (e) => {
     e.preventDefault()

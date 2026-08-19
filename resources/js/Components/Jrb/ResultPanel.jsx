@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from '@inertiajs/react'
 import { FaCheckCircle, FaExclamationTriangle, FaTimesCircle, FaCopy } from 'react-icons/fa'
 
@@ -81,12 +81,20 @@ function DataGrid({ data }) {
  * Complete New Registration page.
  */
 export default function ResultPanel({ result, continueTo }) {
+  const ref = useRef(null)
+
+  // Some forms are long enough that a result rendered beneath them lands off
+  // screen, making a successful submit look like nothing happened.
+  useEffect(() => {
+    if (result) ref.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [result])
+
   if (!result) return null
 
   const tone = TONES[result.tone] ?? TONES.error
 
   return (
-    <div className={`rounded-lg border p-4 ${tone.wrap}`}>
+    <div ref={ref} className={`rounded-lg border p-4 ${tone.wrap}`}>
       <div className="flex items-start gap-3">
         <div className="mt-0.5">{tone.icon}</div>
         <div className="min-w-0 flex-1">
