@@ -41,7 +41,6 @@ export default function NonIndividualRegister() {
   const [directors, setDirectors] = useState([{ ...EMPTY_DIRECTOR }])
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [raw, setRaw] = useState()
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -78,7 +77,6 @@ export default function NonIndividualRegister() {
     }
 
     const { status, body } = await postJrb('/non-individual/register', payload)
-    setRaw(body)
     setResult(interpret(status, body))
     setLoading(false)
   }
@@ -322,7 +320,7 @@ export default function NonIndividualRegister() {
 
         {result && (
           <div className="mt-6">
-            <ResultPanel result={result} raw={raw} />
+            <ResultPanel result={result} />
           </div>
         )}
       </DashboardLayout>

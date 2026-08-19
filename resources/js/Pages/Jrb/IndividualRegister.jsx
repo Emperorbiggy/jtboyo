@@ -41,7 +41,6 @@ export default function IndividualRegister() {
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [raw, setRaw] = useState()
 
   // Pre-fill from the lookup page's "continue" link.
   useEffect(() => {
@@ -74,7 +73,6 @@ export default function IndividualRegister() {
     }
 
     const { status, body } = await postJrb('/individual/register', payload)
-    setRaw(body)
     setResult(interpret(status, body))
     setLoading(false)
   }
@@ -201,7 +199,7 @@ export default function IndividualRegister() {
 
         {result && (
           <div className="mt-6">
-            <ResultPanel result={result} raw={raw} />
+            <ResultPanel result={result} />
           </div>
         )}
       </DashboardLayout>

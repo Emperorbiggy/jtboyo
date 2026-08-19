@@ -13,7 +13,6 @@ export default function Cooperative() {
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [raw, setRaw] = useState()
 
   const set = (name, value) => setForm((f) => ({ ...f, [name]: value }))
 
@@ -23,7 +22,6 @@ export default function Cooperative() {
     setResult(null)
 
     const { status, body } = await postJrb('/cooperative/resolve', form)
-    setRaw(body)
     setResult(interpret(status, body))
     setLoading(false)
   }
@@ -64,7 +62,7 @@ export default function Cooperative() {
 
         {result && (
           <div className="mt-6">
-            <ResultPanel result={result} raw={raw} />
+            <ResultPanel result={result} />
           </div>
         )}
       </DashboardLayout>

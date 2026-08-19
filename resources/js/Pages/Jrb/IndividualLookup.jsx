@@ -12,7 +12,6 @@ export default function IndividualLookup() {
   const [form, setForm] = useState(EMPTY)
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [raw, setRaw] = useState()
 
   const set = (name, value) => setForm((f) => ({ ...f, [name]: value }))
 
@@ -22,7 +21,6 @@ export default function IndividualLookup() {
     setResult(null)
 
     const { status, body } = await postJrb('/individual/lookup', form)
-    setRaw(body)
     setResult(interpret(status, body))
     setLoading(false)
   }
@@ -78,7 +76,7 @@ export default function IndividualLookup() {
 
         {result && (
           <div className="mt-6">
-            <ResultPanel result={result} raw={raw} continueTo={continueTo} />
+            <ResultPanel result={result} continueTo={continueTo} />
           </div>
         )}
       </DashboardLayout>

@@ -80,9 +80,7 @@ function DataGrid({ data }) {
  * `continueTo` turns a 202 into an actionable link to the matching
  * Complete New Registration page.
  */
-export default function ResultPanel({ result, raw, continueTo }) {
-  const [showRaw, setShowRaw] = useState(false)
-
+export default function ResultPanel({ result, continueTo }) {
   if (!result) return null
 
   const tone = TONES[result.tone] ?? TONES.error
@@ -124,22 +122,6 @@ export default function ResultPanel({ result, raw, continueTo }) {
             </Link>
           )}
 
-          {raw !== undefined && (
-            <div className="mt-3">
-              <button
-                type="button"
-                onClick={() => setShowRaw((v) => !v)}
-                className="text-xs font-medium text-gray-500 underline hover:text-gray-700"
-              >
-                {showRaw ? 'Hide' : 'Show'} raw response
-              </button>
-              {showRaw && (
-                <pre className="mt-2 max-h-72 overflow-auto rounded bg-gray-900 p-3 text-xs text-gray-100">
-                  {JSON.stringify(raw, null, 2)}
-                </pre>
-              )}
-            </div>
-          )}
         </div>
       </div>
     </div>

@@ -10,7 +10,6 @@ export default function TaxIdVerification() {
   const [taxId, setTaxId] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
-  const [raw, setRaw] = useState()
 
   const submit = async (e) => {
     e.preventDefault()
@@ -18,7 +17,6 @@ export default function TaxIdVerification() {
     setResult(null)
 
     const { status, body } = await postJrb('/taxid/verify', { taxId })
-    setRaw(body)
     setResult(interpret(status, body))
     setLoading(false)
   }
@@ -50,7 +48,7 @@ export default function TaxIdVerification() {
 
         {result && (
           <div className="mt-6">
-            <ResultPanel result={result} raw={raw} />
+            <ResultPanel result={result} />
           </div>
         )}
       </DashboardLayout>
