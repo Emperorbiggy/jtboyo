@@ -41,8 +41,6 @@ export default function IndividualLookup() {
         <PageHeader
           title="Individual — Tax ID Lookup"
           section="First-Level"
-          method="POST"
-          endpoint="/api/v1/Individual/first-level/taxid/lookup"
           description="Search for a taxpayer's Tax ID using their NIN and personal details. A 200 returns the Tax ID; a 202 means the record exists but is incomplete, and you continue to Complete Registration; a 404 means no match."
         />
 

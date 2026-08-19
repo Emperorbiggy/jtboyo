@@ -35,8 +35,6 @@ export default function Cooperative() {
         <PageHeader
           title="Cooperative — Tax ID Retrieval"
           section="Resolve"
-          method="POST"
-          endpoint="/api/Cooporative/resolve"
           description="Resolve a cooperative society's Tax ID from its registration number, state and date of incorporation. This is a resolve endpoint — no prior lookup is required."
         />
 

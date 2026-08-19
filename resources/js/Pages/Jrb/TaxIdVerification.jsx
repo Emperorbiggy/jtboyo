@@ -30,8 +30,6 @@ export default function TaxIdVerification() {
         <PageHeader
           title="Tax ID Verification"
           section="Verify"
-          method="POST"
-          endpoint="/api/TaxIdVerification/verify"
           description="Verify an existing Tax ID and confirm the taxpayer it belongs to. A successful response returns the taxpayer's name and type."
         />
 

@@ -90,8 +90,6 @@ export default function NonIndividualRegister() {
         <PageHeader
           title="Non-Individual — Complete New Registration"
           section="Second-Level"
-          method="POST"
-          endpoint="/api/v1/NonIndividual/second-level/taxid/complete-new-registration"
           description="Finish registering a company whose First-Level Lookup returned 202. Run the lookup first — calling this directly returns status 003."
         />
 

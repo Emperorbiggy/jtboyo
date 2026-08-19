@@ -39,8 +39,6 @@ export default function Mdas() {
         <PageHeader
           title="MDAs — Tax ID Retrieval"
           section="Resolve"
-          method="POST"
-          endpoint="/api/Mdas/resolve"
           description="Resolve the Tax ID of a Ministry, Department or Agency from its source and organisation number. This is a resolve endpoint — no prior lookup is required."
         />
 
