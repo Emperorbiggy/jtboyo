@@ -8,7 +8,6 @@ import {
   FaHandshake,
   FaLandmark,
   FaIdCard,
-  FaListUl,
   FaKey,
   FaBars,
   FaTimes,
@@ -47,10 +46,7 @@ const NAV = [
   },
   {
     group: 'Reference',
-    items: [
-      { label: 'Lookups', href: '/jrb/lookups', icon: FaListUl },
-      { label: 'Partner API Apps', href: '/create-app', icon: FaKey },
-    ],
+    items: [{ label: 'Partner API Apps', href: '/create-app', icon: FaKey }],
   },
 ]
 

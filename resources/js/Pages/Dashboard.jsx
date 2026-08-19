@@ -6,7 +6,6 @@ import {
   FaHandshake,
   FaLandmark,
   FaIdCard,
-  FaListUl,
   FaArrowRight,
 } from 'react-icons/fa'
 import DashboardLayout from '@/Layouts/DashboardLayout'
@@ -50,12 +49,6 @@ const DIRECT = [
     icon: FaIdCard,
     href: '/jrb/taxid-verification',
     blurb: 'Confirm an existing Tax ID and see who it belongs to.',
-  },
-  {
-    title: 'Reference Lookups',
-    icon: FaListUl,
-    href: '/jrb/lookups',
-    blurb: 'Browse organisation types, sectors, lines of business, states and more.',
   },
 ]
 
@@ -117,9 +110,9 @@ export default function Dashboard() {
 
         {/* Single-call endpoints */}
         <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-gray-500">
-          Resolve, verify &amp; reference
+          Resolve &amp; verify
         </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {DIRECT.map((card) => {
             const Icon = card.icon
 
