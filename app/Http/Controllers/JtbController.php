@@ -187,7 +187,8 @@ class JtbController extends Controller
             'city' => 'required|string',
             'street' => 'required|string',
             'houseNumber' => 'required|string',
-            'taxpayerPhoto' => 'nullable|string',
+            // Base64 of a 600px JPEG lands well under 200KB; the cap is a guard.
+            'taxpayerPhoto' => 'nullable|string|max:2000000',
         ]);
 
         $data = $this->castBooleans($data, ['isResident', 'isExporter', 'isImporter']);

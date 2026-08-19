@@ -4,6 +4,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout'
 import PageHeader from '@/Components/Jrb/PageHeader'
 import ResultPanel from '@/Components/Jrb/ResultPanel'
 import LookupSelect from '@/Components/Jrb/LookupSelect'
+import PhotoField from '@/Components/Jrb/PhotoField'
 import { Field, DateField, BoolField, Section, SubmitButton } from '@/Components/Jrb/Form'
 import { postJrb, interpret } from '@/lib/jrb'
 
@@ -144,7 +145,13 @@ export default function IndividualRegister() {
               prefer="code"
             />
             <Field name="nextOfKin" label="Next of kin" value={form.nextOfKin} onChange={set} />
-            <Field name="taxpayerPhoto" label="Taxpayer photo" value={form.taxpayerPhoto} onChange={set} hint="Base64 string (optional)" />
+            <PhotoField
+              name="taxpayerPhoto"
+              label="Passport photograph"
+              value={form.taxpayerPhoto}
+              onChange={set}
+              hint="Optional. Resized and sent as base64."
+            />
           </Section>
 
           <Section title="Contact" columns={3}>

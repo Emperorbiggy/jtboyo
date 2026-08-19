@@ -365,6 +365,22 @@ class JtbService
                 'response' => $body ?? $response->body(),
             ]);
 
+            // Checked before anything else: a lapsed token can arrive as a 401
+            // or as a message in a 200 body, and either way one fresh login
+            // fixes it. The app user's own session is never touched.
+            if ($this->isExpiredToken($response->status(), $body) && !$retrying) {
+                Log::info("JRB ↻ {$label}: token rejected, logging in again", [
+                    'status' => $response->status(),
+                    'body_message' => is_array($body) ? ($body['message'] ?? null) : null,
+                ]);
+
+                $this->forgetToken();
+
+                if ($fresh = $this->token()) {
+                    return $this->lookup($path, $fresh, $label, true);
+                }
+            }
+
             // A lookup answers with a JSON array. Anything else on a 200 — most
             // often JRB's own {success:false,...} error envelope — is a failure
             // dressed as success, and must not reach the UI as a result.
@@ -386,16 +402,6 @@ class JtbService
                     'message' => $body['message'] ?? "JRB reported a failure fetching {$label}.",
                     'data' => $body,
                 ];
-            }
-
-            // The 60-minute JRB session lapsed mid-use: re-login once.
-            if ($this->isExpiredToken($response->status()) && !$retrying) {
-                Log::info("JRB ↻ {$label}: token rejected, retrying with a fresh login");
-                $this->forgetToken();
-
-                if ($fresh = $this->token()) {
-                    return $this->lookup($path, $fresh, $label, true);
-                }
             }
 
             Log::warning("JRB ✗ {$label} failed", [
@@ -467,9 +473,15 @@ class JtbService
                 'response' => $body ?? $response->body(),
             ]);
 
-            // The 60-minute JRB session lapsed mid-use: re-login once.
-            if ($this->isExpiredToken($response->status()) && !$retrying) {
-                Log::info("JRB ↻ {$label}: token rejected, retrying with a fresh login");
+            // A lapsed token can arrive as a 401 or as a message in a 200 body,
+            // and either way one fresh login fixes it. The app user's own
+            // session is never touched.
+            if ($this->isExpiredToken($response->status(), $body) && !$retrying) {
+                Log::info("JRB ↻ {$label}: token rejected, logging in again", [
+                    'status' => $response->status(),
+                    'body_message' => is_array($body) ? ($body['message'] ?? null) : null,
+                ]);
+
                 $this->forgetToken();
 
                 if ($fresh = $this->token()) {
@@ -523,10 +535,34 @@ class JtbService
             || (is_int($body['status'] ?? null) && $body['status'] >= 400);
     }
 
-    /** JRB signals a lapsed session with 401/403. */
-    protected function isExpiredToken(int $status): bool
+    /**
+     * Does this response mean our JRB token is no longer good?
+     *
+     * The doc says a login session lapses after 60 minutes and that token or
+     * session errors are fixed by logging in again. It does not say how those
+     * errors arrive, and JRB has been observed reporting failures in the body
+     * under HTTP 200 — so both the status and the message are inspected.
+     *
+     * Kept deliberately narrow: it must not match unrelated faults such as the
+     * "Unexpected character … <" upstream error, which no re-login would fix.
+     */
+    protected function isExpiredToken(int $status, $body = null): bool
     {
-        return in_array($status, [401, 403], true);
+        if (in_array($status, [401, 403], true)) {
+            return true;
+        }
+
+        $message = is_array($body)
+            ? trim((string) ($body['message'] ?? $body['errorMsg'] ?? ''))
+            : '';
+
+        if ($message === '') {
+            return false;
+        }
+
+        // Must name the token/session *and* say something is wrong with it.
+        return (bool) preg_match('/\b(auth ?token|token|session)\b/i', $message)
+            && (bool) preg_match('/\b(expire[sd]?|invalid|unauthori[sz]ed|not valid|missing|required|denied)\b/i', $message);
     }
 
     /**
