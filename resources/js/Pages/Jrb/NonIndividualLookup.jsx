@@ -41,7 +41,6 @@ export default function NonIndividualLookup() {
         <PageHeader
           title="Non-Individual — Tax ID Lookup"
           section="First-Level"
-          description="Search for a company's Tax ID using its CAC registration number and organisation type. The organisation type must match the entity's actual type, or the API returns a 400 mismatch."
         />
 
         <form onSubmit={submit} className="space-y-5">

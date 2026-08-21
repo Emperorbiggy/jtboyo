@@ -153,7 +153,6 @@ export default function Lookups() {
         <PageHeader
           title="Reference Lookups"
           section="Lookups v1"
-          description="The reference lists that supply the IDs and codes used by the registration endpoints. Fetch once, then reuse the id or code as the matching field value."
         />
 
         <div className="grid gap-6 lg:grid-cols-[240px_1fr]">

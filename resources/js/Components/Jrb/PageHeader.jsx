@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function PageHeader({ title, section, description }) {
+export default function PageHeader({ title, section }) {
   return (
     <div className="mb-6">
       <div className="flex flex-wrap items-center gap-2">
@@ -11,8 +11,6 @@ export default function PageHeader({ title, section, description }) {
           </span>
         )}
       </div>
-
-      {description && <p className="mt-1.5 max-w-3xl text-sm text-gray-600">{description}</p>}
     </div>
   )
 }

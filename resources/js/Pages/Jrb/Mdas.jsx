@@ -37,7 +37,6 @@ export default function Mdas() {
         <PageHeader
           title="MDAs — Tax ID Retrieval"
           section="Resolve"
-          description="Resolve the Tax ID of a Ministry, Department or Agency from its source and organisation number. This is a resolve endpoint — no prior lookup is required."
         />
 
         <form onSubmit={submit} className="space-y-5">

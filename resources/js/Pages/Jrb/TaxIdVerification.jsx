@@ -34,7 +34,6 @@ export default function TaxIdVerification() {
         <PageHeader
           title="Tax ID Verification"
           section="Verify"
-          description="Verify an existing Tax ID and confirm the taxpayer it belongs to. A successful response returns the taxpayer's name and type."
         />
 
         <form onSubmit={submit} className="space-y-5">

@@ -110,7 +110,6 @@ export default function NonIndividualRegister() {
         <PageHeader
           title="Non-Individual — Complete New Registration"
           section="Second-Level"
-          description="Finish registering a company whose First-Level Lookup returned 202. Run the lookup first — calling this directly returns status 003."
         />
 
         <form onSubmit={submit} className="space-y-5">
