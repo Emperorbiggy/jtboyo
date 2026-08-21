@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -418,6 +419,24 @@ class JtbService
                     : "JRB returned HTTP {$response->status()} for {$label}.",
                 'data' => $body,
             ];
+        } catch (RequestException $e) {
+            // JRB answered with an HTTP error — that is a result, not an outage.
+            $body = $e->response?->json();
+
+            Log::warning("JRB ✗ {$label} failed", [
+                'url' => $url,
+                'status' => $e->response?->status(),
+                'response' => $body ?? $e->response?->body(),
+            ]);
+
+            return [
+                'success' => false,
+                'status' => $e->response?->status() ?? 502,
+                'message' => is_array($body) && !empty($body['message'])
+                    ? $body['message']
+                    : "JRB returned an error for {$label}.",
+                'data' => $body,
+            ];
         } catch (\Exception $e) {
             $failure = $this->describeTransportFailure($e, $label);
 
@@ -507,6 +526,22 @@ class JtbService
                 'status' => $response->status(),
                 'body' => $body ?? ['raw' => $response->body()],
             ];
+        } catch (RequestException $e) {
+            // JRB answered with an HTTP error — pass its own status and body
+            // through, so the page shows what it actually said (e.g. a 404
+            // "No matching MDA taxpayer found") rather than a connectivity message.
+            $body = $e->response?->json();
+
+            Log::warning("JRB ✗ {$label} failed (HTTP {$e->response?->status()})", [
+                'url' => $url,
+                'request' => $payload,
+                'response' => $body ?? $e->response?->body(),
+            ]);
+
+            return [
+                'status' => $e->response?->status() ?? 502,
+                'body' => $body ?? ['success' => false, 'message' => "JRB returned an error for {$label}."],
+            ];
         } catch (\Exception $e) {
             Log::error("JRB ✗ {$label} exception", [
                 'url' => $url,
@@ -567,17 +602,24 @@ class JtbService
         return Http::connectTimeout(self::CONNECT_TIMEOUT)
             ->timeout($timeout)
             ->acceptJson()
-            ->retry(3, fn (int $attempt) => $attempt * 1000, function (\Throwable $e) use ($idempotent) {
-                if (!$e instanceof ConnectionException) {
-                    return false;
-                }
+            ->retry(
+                3,
+                fn (int $attempt) => $attempt * 1000,
+                function (\Throwable $e) use ($idempotent) {
+                    // Only transport failures are worth another attempt. An HTTP
+                    // error is a real answer from JRB — a 404 "no matching
+                    // taxpayer" must be returned, never retried.
+                    if (!$e instanceof ConnectionException) {
+                        return false;
+                    }
 
-                if ($idempotent) {
-                    return true;
-                }
-
-                return $this->connectionNeverEstablished($e->getMessage());
-            });
+                    return $idempotent || $this->connectionNeverEstablished($e->getMessage());
+                },
+                // Critical: without this, retry() turns every non-2xx into an
+                // exception, so JRB's 404s and 400s would surface as "could not
+                // reach the API" instead of the message they actually carry.
+                throw: false
+            );
     }
 
     /** Did the request fail before JRB could have received it? */
