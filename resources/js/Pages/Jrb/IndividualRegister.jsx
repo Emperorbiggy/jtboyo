@@ -197,7 +197,11 @@ export default function IndividualRegister() {
               label="State of residence"
               required
               value={form.stateOfResidenceCode}
-              onChange={set}
+              onChange={(name, value) => {
+                set(name, value)
+                // The LGA list belongs to the old state — drop the selection.
+                set('lgaCode', '')
+              }}
               prefer="code"
             />
             <LookupSelect

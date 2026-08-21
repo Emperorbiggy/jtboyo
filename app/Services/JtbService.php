@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -113,7 +114,7 @@ class JtbService
         ]);
 
         try {
-            $response = Http::timeout(15)->acceptJson()->post($url, $payload);
+            $response = $this->http(30, idempotent: true)->post($url, $payload);
 
             $data = $response->json();
 
@@ -350,8 +351,7 @@ class JtbService
         ]);
 
         try {
-            $response = Http::timeout(60)
-                ->acceptJson()
+            $response = $this->http(60, idempotent: true)
                 ->get($url, ['authtoken' => $token]);
 
             $body = $response->json();
@@ -460,8 +460,7 @@ class JtbService
             // Encoded by hand so dates go out as "10/04/1999" rather than PHP's
             // default "10\/04\/1999". Both are valid JSON, but this makes our
             // bytes identical to a hand-written Postman request.
-            $response = Http::timeout(60)
-                ->acceptJson()
+            $response = $this->http(60, idempotent: false)
                 ->withBody(
                     json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
                     'application/json'
@@ -541,6 +540,56 @@ class JtbService
 
         return ($body['success'] ?? null) === false
             || (is_int($body['status'] ?? null) && $body['status'] >= 400);
+    }
+
+    /**
+     * Seconds allowed for the TCP handshake alone.
+     *
+     * Laravel caps this at 10s by default and applies it separately from
+     * timeout(), so a slow connect fails at 10s no matter how generous the
+     * overall timeout is. The route to JRB crosses ~175ms of international
+     * transit, so it gets more room.
+     */
+    protected const CONNECT_TIMEOUT = 20;
+
+    /**
+     * A configured HTTP client with retries.
+     *
+     * $idempotent decides how bold the retry may be:
+     *   true  — GETs and login: safe to repeat, so retry any connection error.
+     *   false — registrations and resolves: retry ONLY when the connection
+     *           itself never came up, which proves JRB never saw the request.
+     *           A read timeout is never retried, because JRB may have already
+     *           processed it and a second attempt could register twice.
+     */
+    protected function http(int $timeout, bool $idempotent)
+    {
+        return Http::connectTimeout(self::CONNECT_TIMEOUT)
+            ->timeout($timeout)
+            ->acceptJson()
+            ->retry(3, fn (int $attempt) => $attempt * 1000, function (\Throwable $e) use ($idempotent) {
+                if (!$e instanceof ConnectionException) {
+                    return false;
+                }
+
+                if ($idempotent) {
+                    return true;
+                }
+
+                return $this->connectionNeverEstablished($e->getMessage());
+            });
+    }
+
+    /** Did the request fail before JRB could have received it? */
+    protected function connectionNeverEstablished(string $message): bool
+    {
+        foreach (['Connection timed out', 'Failed to connect', 'Could not resolve host', 'Connection refused'] as $needle) {
+            if (stripos($message, $needle) !== false) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
