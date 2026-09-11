@@ -203,7 +203,7 @@ class JtbController extends Controller
     public function nonIndividualLookup(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'cacRegNo' => 'required|string',
+            'regNo' => 'required|string',
             'organizationTypeId' => 'required|integer|min:1',
         ]);
 

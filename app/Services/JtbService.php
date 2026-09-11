@@ -282,7 +282,7 @@ class JtbService
     /**
      * First-level Tax ID lookup by CAC registration number.
      *
-     * @param array{cacRegNo:string,organizationTypeId:int} $payload
+     * @param array{regNo:string,organizationTypeId:int} $payload
      */
     public function nonIndividualFirstLevelLookup(string $token, array $payload): array
     {

@@ -27,6 +27,7 @@ const LABELS = {
   taxpayerType: 'Taxpayer type',
   registeredName: 'Registered name',
   cacRegNo: 'CAC reg. number',
+  regNo: 'Registration number',
   nin: 'NIN',
   name: 'Name',
   next_step: 'Next step',

@@ -7,7 +7,7 @@ import LookupSelect from '@/Components/Jrb/LookupSelect'
 import { Field, Section, SubmitButton } from '@/Components/Jrb/Form'
 import { postJrb, interpret } from '@/lib/jrb'
 
-const EMPTY = { cacRegNo: '', organizationTypeId: '' }
+const EMPTY = { regNo: '', organizationTypeId: '' }
 
 export default function NonIndividualLookup() {
   const [form, setForm] = useState(EMPTY)
@@ -22,7 +22,7 @@ export default function NonIndividualLookup() {
     setResult(null)
 
     const { status, body } = await postJrb('/non-individual/lookup', {
-      cacRegNo: form.cacRegNo,
+      regNo: form.regNo,
       organizationTypeId: Number(form.organizationTypeId) || 0,
     })
 
@@ -31,7 +31,7 @@ export default function NonIndividualLookup() {
   }
 
   const continueTo =
-    `/jrb/non-individual/register?registrationNumber=${encodeURIComponent(form.cacRegNo)}` +
+    `/jrb/non-individual/register?registrationNumber=${encodeURIComponent(form.regNo)}` +
     `&organizationTypeId=${encodeURIComponent(form.organizationTypeId)}`
 
   return (
@@ -46,10 +46,10 @@ export default function NonIndividualLookup() {
         <form onSubmit={submit} className="space-y-5">
           <Section title="Entity identity" columns={2}>
             <Field
-              name="cacRegNo"
+              name="regNo"
               label="CAC registration number"
               required
-              value={form.cacRegNo}
+              value={form.regNo}
               onChange={set}
               placeholder="RC1504347"
             />
