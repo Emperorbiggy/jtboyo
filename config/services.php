@@ -35,7 +35,7 @@ return [
     | lookups under /api, so the paths are built in JtbService.
     */
     'jrb' => [
-        'base_url' => env('JRB_BASE_URL', 'https://api.jrb.gov.ng:8311'),
+        'base_url' => env('JRB_BASE_URL', 'https://prod-api.jrb.gov.ng:8311'),
         'email' => env('JRB_EMAIL'),
         'password' => env('JRB_PASSWORD'),
         'client_name' => env('JRB_CLIENT_NAME', 'jrb'),
