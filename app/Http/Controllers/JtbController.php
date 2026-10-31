@@ -287,6 +287,20 @@ class JtbController extends Controller
         return $this->proxy(fn ($t) => $this->jtbService->verifyTaxId($t, $data['taxId']));
     }
 
+    /**
+     * The old JTB-era POST /api/v1/verify-tin ({type, tin}). JRB verifies a
+     * Tax ID the same way whatever the taxpayer type, so `type` is only checked.
+     */
+    public function legacyVerifyTin(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'type' => 'required|string|in:individual,non-individual',
+            'tin' => 'required|string',
+        ]);
+
+        return $this->proxy(fn ($t) => $this->jtbService->verifyTaxId($t, $data['tin']));
+    }
+
     /* ---------------------------------------------------------------------
      | Helpers
      * ------------------------------------------------------------------ */

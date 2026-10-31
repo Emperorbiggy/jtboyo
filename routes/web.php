@@ -24,7 +24,7 @@ Route::get('/', function () {
 })->name('login');
 
 // JRB State API console
-Route::prefix('jrb')->group(function () {
+Route::prefix('jrb')->middleware('auth')->group(function () {
     Route::inertia('/individual/lookup', 'Jrb/IndividualLookup');
     Route::inertia('/individual/register', 'Jrb/IndividualRegister');
     Route::inertia('/non-individual/lookup', 'Jrb/NonIndividualLookup');
@@ -35,9 +35,12 @@ Route::prefix('jrb')->group(function () {
     Route::inertia('/lookups', 'Jrb/Lookups');
 });
 
+// Public developer documentation for the /api/v1 partner API.
+Route::inertia('/developers', 'Developers')->name('developers');
+
 Route::get('/create-app', function () {
     return Inertia::render('AuthApps');
-});
+})->middleware('auth');
 
 // Connectivity/credentials check for the JRB API, as seen by the web process.
 Route::get('/jrb/token', [JtbController::class, 'getToken'])->middleware('auth');

@@ -73,6 +73,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Partner/consultant API traffic, one file per day.
+        'api' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/api.log'),
+            'level' => 'info',
+            'days' => 90,
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),
