@@ -20,5 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Leave out API middleware here if you're handling it per group
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // API callers get JSON validation/auth errors even without an
+        // Accept: application/json header, never a redirect to the login page.
+        $exceptions->shouldRenderJsonWhen(fn ($request) => $request->is('api/*'));
     })->create();

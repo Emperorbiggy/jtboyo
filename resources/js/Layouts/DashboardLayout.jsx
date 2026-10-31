@@ -9,6 +9,7 @@ import {
   FaLandmark,
   FaIdCard,
   FaKey,
+  FaBook,
   FaBars,
   FaTimes,
 } from 'react-icons/fa'
@@ -46,7 +47,10 @@ const NAV = [
   },
   {
     group: 'Reference',
-    items: [{ label: 'Partner API Apps', href: '/create-app', icon: FaKey }],
+    items: [
+      { label: 'Partner API Apps', href: '/create-app', icon: FaKey },
+      { label: 'API Documentation', href: '/developers', icon: FaBook },
+    ],
   },
 ]
 

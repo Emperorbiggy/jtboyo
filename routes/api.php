@@ -47,11 +47,14 @@ Route::middleware([
         Route::post('/taxid/verify', [JtbController::class, 'verifyTaxId']);
     });
 
-    Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
-    Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
-    Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateApp']);         // ✅ Fixed
-Route::delete('/v1/auth-apps/{id}', [ApiController::class, 'deleteApp']);      // ✅ Fixed 
-    Route::patch('/v1/auth-apps/{id}/status', [ApiController::class, 'toggleStatus']); 
+    // API key management — operators only, since these list and mint live keys.
+    Route::middleware('auth')->group(function () {
+        Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
+        Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
+        Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateApp']);
+        Route::delete('/v1/auth-apps/{id}', [ApiController::class, 'deleteApp']);
+        Route::patch('/v1/auth-apps/{id}/status', [ApiController::class, 'toggleStatus']);
+    });
 });
 
 require __DIR__.'/api/v1.php';
