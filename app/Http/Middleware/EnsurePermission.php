@@ -17,7 +17,9 @@ class EnsurePermission
     {
         $user = $request->user();
 
-        if ($user && !$user->is_active) {
+        // Only an explicit false counts: before the migration runs the column
+        // is missing (null), and that must not lock everyone out.
+        if ($user && $user->is_active === false) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
