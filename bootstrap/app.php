@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        $middleware->alias([
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+        ]);
+
         // Leave out API middleware here if you're handling it per group
     })
     ->withExceptions(function (Exceptions $exceptions): void {

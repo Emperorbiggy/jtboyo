@@ -21,6 +21,15 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_super_admin',
+        'permissions',
+        'is_active',
+    ];
+
+    /** Match the column defaults, so a fresh model counts as active. */
+    protected $attributes = [
+        'is_super_admin' => false,
+        'is_active' => true,
     ];
 
     /**
@@ -43,6 +52,26 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_super_admin' => 'boolean',
+            'permissions' => 'array',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        return $this->is_super_admin || in_array($permission, $this->permissions ?? [], true);
+    }
+
+    /**
+     * What this user may do, for the frontend to show or hide navigation.
+     *
+     * @return list<string>
+     */
+    public function grantedPermissions(): array
+    {
+        return $this->is_super_admin
+            ? \App\Support\Permissions::all()
+            : array_values(array_intersect(\App\Support\Permissions::all(), $this->permissions ?? []));
     }
 }

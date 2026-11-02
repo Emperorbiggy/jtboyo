@@ -16,8 +16,8 @@ const FLOWS = [
     icon: FaUser,
     blurb: 'Find a taxpayer’s Tax ID from their NIN, then complete the record if it comes back incomplete.',
     steps: [
-      { label: 'Tax ID Lookup', href: '/jrb/individual/lookup', tag: 'First-Level' },
-      { label: 'Complete Registration', href: '/jrb/individual/register', tag: 'Second-Level' },
+      { label: 'Tax ID Lookup', href: '/jrb/individual/lookup', tag: 'First-Level', permission: 'individual.lookup' },
+      { label: 'Complete Registration', href: '/jrb/individual/register', tag: 'Second-Level', permission: 'individual.register' },
     ],
   },
   {
@@ -25,8 +25,8 @@ const FLOWS = [
     icon: FaBuilding,
     blurb: 'Find a company’s Tax ID from its CAC number and organisation type, then complete the corporate record.',
     steps: [
-      { label: 'Tax ID Lookup', href: '/jrb/non-individual/lookup', tag: 'First-Level' },
-      { label: 'Complete Registration', href: '/jrb/non-individual/register', tag: 'Second-Level' },
+      { label: 'Tax ID Lookup', href: '/jrb/non-individual/lookup', tag: 'First-Level', permission: 'non_individual.lookup' },
+      { label: 'Complete Registration', href: '/jrb/non-individual/register', tag: 'Second-Level', permission: 'non_individual.register' },
     ],
   },
 ]
@@ -36,18 +36,21 @@ const DIRECT = [
     title: 'Cooperative',
     icon: FaHandshake,
     href: '/jrb/cooperative',
+    permission: 'resolve',
     blurb: 'Resolve a cooperative society’s Tax ID. No prior lookup needed.',
   },
   {
     title: 'MDAs',
     icon: FaLandmark,
     href: '/jrb/mdas',
+    permission: 'resolve',
     blurb: 'Resolve a State or Federal MDA’s Tax ID by organisation number.',
   },
   {
     title: 'Tax ID Verification',
     icon: FaIdCard,
     href: '/jrb/taxid-verification',
+    permission: 'verify',
     blurb: 'Confirm an existing Tax ID and see who it belongs to.',
   },
 ]
@@ -55,6 +58,11 @@ const DIRECT = [
 export default function Dashboard() {
   const { props } = usePage()
   const user = props.auth?.user
+  const granted = props.auth?.permissions ?? []
+  const allowed = (item) => granted.includes(item.permission)
+
+  const flows = FLOWS.map((flow) => ({ ...flow, steps: flow.steps.filter(allowed) })).filter((flow) => flow.steps.length)
+  const direct = DIRECT.filter(allowed)
 
   return (
     <>
@@ -69,7 +77,7 @@ export default function Dashboard() {
 
         {/* Two-step flows */}
         <div className="grid gap-5 lg:grid-cols-2">
-          {FLOWS.map((flow) => {
+          {flows.map((flow) => {
             const Icon = flow.icon
 
             return (
@@ -108,12 +116,20 @@ export default function Dashboard() {
           })}
         </div>
 
+        {flows.length === 0 && direct.length === 0 && (
+          <div className="rounded-lg border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-gray-600">
+            Your account has no console permissions yet. Ask an administrator to grant you access.
+          </div>
+        )}
+
         {/* Single-call endpoints */}
+        {direct.length > 0 && (
         <h2 className="mb-3 mt-8 text-sm font-semibold uppercase tracking-wide text-gray-500">
           Resolve &amp; verify
         </h2>
+        )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {DIRECT.map((card) => {
+          {direct.map((card) => {
             const Icon = card.icon
 
             return (
