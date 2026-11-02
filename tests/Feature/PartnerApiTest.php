@@ -118,6 +118,10 @@ class PartnerApiTest extends TestCase
 
         $this->actingAs(User::factory()->create())
             ->postJson('/api/v1/generate-token', ['app_name' => 'Consultant B', 'whitelisted_ips' => '1.1.1.1'])
+            ->assertForbidden();
+
+        $this->actingAs(User::factory()->create(['permissions' => ['api_keys.manage']]))
+            ->postJson('/api/v1/generate-token', ['app_name' => 'Consultant B', 'whitelisted_ips' => '1.1.1.1'])
             ->assertCreated();
     }
 }

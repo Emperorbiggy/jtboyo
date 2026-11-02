@@ -129,6 +129,17 @@ export function interpret(status, body) {
     const titles = { 404: 'Not found', 500: 'JRB internal error', 502: 'JRB upstream error', 503: 'JRB unavailable' }
     const details = flattenErrors(body.error ?? body.errors)
 
+    // A bare "Lookup failed" from the external check names no fields, which
+    // reads like the details matched. Say what it does and does not tell us.
+    const mismatch = body.data?.mismatch_fields
+    const noMismatch = mismatch === null || mismatch === undefined || (Array.isArray(mismatch) && mismatch.length === 0)
+    if (body.data?.source === 'external_verify' && bodyStatus === 404 && noMismatch) {
+      details.push(
+        'JRB could not find a matching record in the external registry and did not name any mismatched fields. ' +
+          'Check the registration number and that the organisation type matches the one on the certificate.'
+      )
+    }
+
     if (bodyStatus !== null && bodyStatus >= 500) {
       details.push(
         'This is a fault inside the JRB API, not a problem with the details you entered — ' +
@@ -171,6 +182,7 @@ export function interpret(status, body) {
 
   const titles = {
     401: 'Session ended',
+    403: 'Not allowed',
     419: 'Session ended',
     404: 'Not found',
     502: 'JRB API unreachable',

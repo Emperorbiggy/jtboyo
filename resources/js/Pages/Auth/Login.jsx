@@ -158,29 +158,9 @@ export default function Login({ status, canResetPassword }) {
             </div>
           </form>
 
-          {/* Signup Link */}
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 mb-2">Don't have an account?</p>
-            <Link
-              href={route('register')}
-              className="inline-flex items-center justify-center gap-2 w-full border border-[#0E7F1B] text-[#0E7F1B] hover:bg-[#0E7F1B] hover:text-white font-semibold py-2 px-4 rounded-md transition duration-200"
-            >
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5.121 17.804A10 10 0 0112 15a10 10 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              Create Account
-            </Link>
-          </div>
+          <p className="mt-6 text-center text-sm text-gray-500">
+            Need an account? Ask an administrator to add you.
+          </p>
         </div>
       </div>
     </>

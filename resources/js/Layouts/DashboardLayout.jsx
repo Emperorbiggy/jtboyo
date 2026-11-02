@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { usePage, router, Link } from '@inertiajs/react'
+import toast from 'react-hot-toast'
 import {
   FaUserCircle,
   FaTachometerAlt,
@@ -10,6 +11,8 @@ import {
   FaIdCard,
   FaKey,
   FaBook,
+  FaUserShield,
+  FaQuestionCircle,
   FaBars,
   FaTimes,
 } from 'react-icons/fa'
@@ -18,37 +21,41 @@ import {
 const NAV = [
   {
     group: null,
-    items: [{ label: 'Overview', href: '/dashboard', icon: FaTachometerAlt }],
+    items: [
+      { label: 'Overview', href: '/dashboard', icon: FaTachometerAlt },
+      { label: 'User Guide', href: '/guide', icon: FaQuestionCircle },
+    ],
   },
   {
     group: 'Individual',
     items: [
-      { label: 'Tax ID Lookup', href: '/jrb/individual/lookup', icon: FaUser },
-      { label: 'Complete Registration', href: '/jrb/individual/register', icon: FaUser },
+      { label: 'Tax ID Lookup', href: '/jrb/individual/lookup', icon: FaUser, permission: 'individual.lookup' },
+      { label: 'Complete Registration', href: '/jrb/individual/register', icon: FaUser, permission: 'individual.register' },
     ],
   },
   {
     group: 'Non-Individual',
     items: [
-      { label: 'Tax ID Lookup', href: '/jrb/non-individual/lookup', icon: FaBuilding },
-      { label: 'Complete Registration', href: '/jrb/non-individual/register', icon: FaBuilding },
+      { label: 'Tax ID Lookup', href: '/jrb/non-individual/lookup', icon: FaBuilding, permission: 'non_individual.lookup' },
+      { label: 'Complete Registration', href: '/jrb/non-individual/register', icon: FaBuilding, permission: 'non_individual.register' },
     ],
   },
   {
     group: 'Resolve',
     items: [
-      { label: 'Cooperative', href: '/jrb/cooperative', icon: FaHandshake },
-      { label: 'MDAs', href: '/jrb/mdas', icon: FaLandmark },
+      { label: 'Cooperative', href: '/jrb/cooperative', icon: FaHandshake, permission: 'resolve' },
+      { label: 'MDAs', href: '/jrb/mdas', icon: FaLandmark, permission: 'resolve' },
     ],
   },
   {
     group: 'Verify',
-    items: [{ label: 'Tax ID Verification', href: '/jrb/taxid-verification', icon: FaIdCard }],
+    items: [{ label: 'Tax ID Verification', href: '/jrb/taxid-verification', icon: FaIdCard, permission: 'verify' }],
   },
   {
-    group: 'Reference',
+    group: 'Administration',
     items: [
-      { label: 'Partner API Apps', href: '/create-app', icon: FaKey },
+      { label: 'Admins', href: '/admins', icon: FaUserShield, permission: 'admins.manage' },
+      { label: 'Partner API Apps', href: '/create-app', icon: FaKey, permission: 'api_keys.manage' },
       { label: 'API Documentation', href: '/developers', icon: FaBook },
     ],
   },
@@ -87,6 +94,17 @@ export default function DashboardLayout({ children }) {
 
   const path = (url ?? '').split('?')[0]
 
+  // Only show what this admin may open; the server enforces the same rules.
+  const granted = props.auth?.permissions ?? []
+  const nav = NAV.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => !item.permission || granted.includes(item.permission)),
+  })).filter((section) => section.items.length > 0)
+
+  useEffect(() => {
+    if (props.flash?.success) toast.success(props.flash.success)
+  }, [props.flash?.success])
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
@@ -106,7 +124,7 @@ export default function DashboardLayout({ children }) {
         </div>
 
         <nav className="space-y-5 px-3 pb-8">
-          {NAV.map((section, index) => (
+          {nav.map((section, index) => (
             <div key={section.group ?? index}>
               {section.group && (
                 <div className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-green-300/70">

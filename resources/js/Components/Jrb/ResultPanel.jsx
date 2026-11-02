@@ -56,7 +56,11 @@ function CopyButton({ text }) {
 function DataGrid({ data }) {
   if (!data || typeof data !== 'object') return null
 
-  const entries = Object.entries(data).filter(([, v]) => v !== null && typeof v !== 'object')
+  // Lists of plain values (e.g. mismatch_fields: ["OrganizationType"]) are
+  // shown joined; empty lists and nested objects are left out.
+  const entries = Object.entries(data)
+    .map(([k, v]) => [k, Array.isArray(v) && v.every((x) => typeof x !== 'object') ? (v.length ? v.join(', ') : null) : v])
+    .filter(([, v]) => v !== null && v !== undefined && typeof v !== 'object')
   if (entries.length === 0) return null
 
   return (

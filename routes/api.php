@@ -15,7 +15,7 @@ Route::middleware([
 ])->group(function () {
     // Authenticated operators only — these proxy straight through to JRB with
     // a service-held token, so they are no longer gated by a session token.
-    Route::prefix('jrb')->middleware('auth')->group(function () {
+    Route::prefix('jrb')->middleware(['auth', 'permission'])->group(function () {
         // Reference lookups
         Route::prefix('lookups')->group(function () {
             Route::get('/organization-types', [JtbController::class, 'organizationTypes']);
@@ -34,21 +34,21 @@ Route::middleware([
         });
 
         // Individual — lookup then complete registration
-        Route::post('/individual/lookup', [JtbController::class, 'individualLookup']);
-        Route::post('/individual/register', [JtbController::class, 'individualRegister']);
+        Route::post('/individual/lookup', [JtbController::class, 'individualLookup'])->middleware('permission:individual.lookup');
+        Route::post('/individual/register', [JtbController::class, 'individualRegister'])->middleware('permission:individual.register');
 
         // Non-Individual — lookup then complete registration
-        Route::post('/non-individual/lookup', [JtbController::class, 'nonIndividualLookup']);
-        Route::post('/non-individual/register', [JtbController::class, 'nonIndividualRegister']);
+        Route::post('/non-individual/lookup', [JtbController::class, 'nonIndividualLookup'])->middleware('permission:non_individual.lookup');
+        Route::post('/non-individual/register', [JtbController::class, 'nonIndividualRegister'])->middleware('permission:non_individual.register');
 
         // Resolve / verify
-        Route::post('/cooperative/resolve', [JtbController::class, 'resolveCooperative']);
-        Route::post('/mda/resolve', [JtbController::class, 'resolveMda']);
-        Route::post('/taxid/verify', [JtbController::class, 'verifyTaxId']);
+        Route::post('/cooperative/resolve', [JtbController::class, 'resolveCooperative'])->middleware('permission:resolve');
+        Route::post('/mda/resolve', [JtbController::class, 'resolveMda'])->middleware('permission:resolve');
+        Route::post('/taxid/verify', [JtbController::class, 'verifyTaxId'])->middleware('permission:verify');
     });
 
     // API key management — operators only, since these list and mint live keys.
-    Route::middleware('auth')->group(function () {
+    Route::middleware(['auth', 'permission:api_keys.manage'])->group(function () {
         Route::post('/v1/generate-token', [ApiController::class, 'generateToken']);
         Route::get('/v1/auth-apps', [ApiController::class, 'getAllAuthApps']);
         Route::put('/v1/auth-apps/{id}', [ApiController::class, 'updateApp']);

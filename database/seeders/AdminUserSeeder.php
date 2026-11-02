@@ -16,6 +16,8 @@ class AdminUserSeeder extends Seeder
                 'name' => 'admin',
                 'email' => 'admin@jrb.oyostate.gov.ng',
                 'password' => Hash::make('password1234'),
+                'is_super_admin' => true,
+                'is_active' => true,
             ]
         );
     }
